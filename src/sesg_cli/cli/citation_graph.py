@@ -1,4 +1,3 @@
-from enum import Enum
 from pathlib import Path
 
 import typer
@@ -7,12 +6,6 @@ from sesg.graph import create_citation_graph, edges_to_adjacency_list
 
 from sesg_cli.database import Session
 from sesg_cli.database.models import SLR, SearchString
-
-
-class SourceChoices(str, Enum):
-    slr = "slr"
-    search_string = "search-string"
-
 
 app = typer.Typer(
     rich_markup_mode="markdown",
