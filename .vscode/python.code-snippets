@@ -1,0 +1,12 @@
+{
+  "Type Checking conditional": {
+    "scope": "python",
+    "prefix": "iftypecheck",
+    "body": [
+      "from typing import TYPE_CHECKING",
+      "if TYPE_CHECKING:",
+      "\t${1}",
+    ],
+    "description": "Creates a type checking-only code block."
+  },
+}
