@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "sesg-cli"
+version = "0.1.0"
+description = ""
+authors = ["Demetrius Panovitch <demetrius.mp789@gmail.com>"]
+readme = "README.md"
+packages = [{include = "sesg_cli", from = "src"}]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.11"
+sesg = "^0.0.40"
+sqlalchemy = "^2.0.15"
+psycopg = {extras = ["binary", "pool"], version = "^3.1.9"}
+
+[tool.ruff]
+extend-select = ["I001"]
+unfixable = ["F841"]
+exclude = [".venv"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
