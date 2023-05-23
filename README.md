@@ -6,6 +6,7 @@ This CLI is used by the authors to perform experimentations with the tool.
 
 ## External dependencies
 
+- [poetry](https://python-poetry.org/). Dependency manager.
 - [PostgreSQL](https://www.postgresql.org/). You can just use a PostgreSQL docker image if you wish.
 
 ## How to use
