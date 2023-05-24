@@ -36,7 +36,11 @@ def create_from_json(
     db_study_mapper: dict[int, Study] = dict()
 
     for study in slr.gs:
-        with open(txts_path / f"{study.node_id}.cermtxt", "r") as f:
+        with open(
+            txts_path / f"{study.node_id}.cermtxt",
+            "r",
+            encoding="utf-8",
+        ) as f:
             text_content = f.read()
 
         sb_study = SnowballingStudy(
