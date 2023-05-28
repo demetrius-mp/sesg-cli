@@ -15,6 +15,7 @@ from sqlalchemy.orm import (
 
 from .base import Base
 
+
 if TYPE_CHECKING:
     from .params import Params
 

@@ -12,6 +12,7 @@ from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
 
 from .base import Base
 
+
 if TYPE_CHECKING:
     from .experiment import Experiment
     from .study import Study

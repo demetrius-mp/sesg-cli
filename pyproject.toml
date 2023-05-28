@@ -1,30 +1,39 @@
-[tool.poetry]
+[project]
 name = "sesg-cli"
-version = "0.1.0"
-description = ""
-authors = ["Demetrius Panovitch <demetrius.mp789@gmail.com>"]
-readme = "README.md"
-packages = [{include = "sesg_cli", from = "src"}]
+version = "0.0.1"
+description = "CLI to interact with SeSG"
+requires-python = "==3.10.10"
+dependencies = [
+  "sesg==0.0.41",
+  "SQLAlchemy==2.0.15",
+  "psycopg[binary,pool]==3.1.9",
+  "tomli==2.0.1",
+  "tomli-w==1.0.0",
+  "dacite==1.8.1",
+  "python-dotenv==1.0.0",
+  "typer[all]==0.9.0",
+  "torch==2.0.1",
+  "transformers==4.29.2",
+  "rich==13.3.5",
+  "trio==0.22.0",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.10,<3.11"
-sesg = "^0.0.40"
-sqlalchemy = "^2.0.15"
-psycopg = {extras = ["binary", "pool"], version = "^3.1.9"}
-tomli = "^2.0.1"
-tomli-w = "^1.0.0"
-dacite = "^1.8.1"
-python-dotenv = "^1.0.0"
-typer = {extras = ["all"], version = "^0.9.0"}
-
-[tool.ruff]
-extend-select = ["I001"]
-unfixable = ["F841"]
-exclude = [".venv"]
+[project.scripts]
+sesg = "sesg_cli.cli:app"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
-[tool.poetry.scripts]
-sesg = "sesg_cli.cli:app"
+[tool.ruff]
+extend-select = [
+  "I001",
+  "C"
+]
+unfixable = ["F841"]
+exclude = [".venv"]
+ignore-init-module-imports = true
+fix = true
+
+[tool.ruff.isort]
+lines-after-imports = 2

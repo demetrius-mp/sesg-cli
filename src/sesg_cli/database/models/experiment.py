@@ -17,6 +17,7 @@ from sqlalchemy.orm import (
 from .association_tables import experiment_qgs
 from .base import Base
 
+
 if TYPE_CHECKING:
     from .params import Params
     from .similar_words_cache import SimilarWordsCache
@@ -99,7 +100,7 @@ class Experiment(Base):
 
         results = session.execute(stmt).scalars().all()
 
-        unique_results: dict[str, SearchString] = dict()
+        unique_results: dict[str, SearchString] = {}
         for r in results:
             unique_results[r.string] = r
 

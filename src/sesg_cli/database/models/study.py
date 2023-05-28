@@ -14,6 +14,7 @@ from sqlalchemy.orm import (
 from .association_tables import experiment_qgs, studies_citations
 from .base import Base
 
+
 if TYPE_CHECKING:
     from .experiment import Experiment
     from .slr import SLR

@@ -23,6 +23,7 @@ from sesg_cli.database.models import (
 )
 from sesg_cli.similar_words_finder_cache import Cache
 
+
 warnings.simplefilter("ignore", category=NumbaDeprecationWarning)
 
 app = typer.Typer(rich_markup_mode="markdown", help="Start an experiment for a SLR.")

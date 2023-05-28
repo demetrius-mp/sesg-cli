@@ -27,6 +27,7 @@
     ".ruff_cache": true,
     "**/__pycache__": true,
     ".coverage": true,
+    "src/sesg_cli.egg-info": true,
   },
   "files.associations": {
     "*.env": "properties",

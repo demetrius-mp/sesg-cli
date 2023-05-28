@@ -1,19 +1,19 @@
-import asyncio
-from functools import wraps
+from functools import partial, wraps
 from pathlib import Path
 
+import trio
 import typer
 from rich import print
 from rich.progress import BarColumn, Progress, TaskProgressColumn, TextColumn
-from sesg.scopus.multi_client import create_clients_list
+from sesg.scopus import ScopusClient, SuccessResponse
+from sesg.scopus.client import InvalidStringError
 
 from sesg_cli.config import Config
 from sesg_cli.database.connection import Session
 from sesg_cli.database.models import (
     Experiment,
 )
-from sesg_cli.multi_client_scopus_search import (
-    MultiClientScopusSearch,
+from sesg_cli.database.models.search_string_performance import (
     SearchStringPerformanceFactory,
 )
 
@@ -23,7 +23,7 @@ class AsyncTyper(typer.Typer):
         def decorator(async_func):
             @wraps(async_func)
             def sync_func(*_args, **_kwargs):
-                return asyncio.run(async_func(*_args, **_kwargs))
+                return trio.run(partial(async_func, *_args, **_kwargs))
 
             self.command(*args, **kwargs)(sync_func)
             return async_func
@@ -46,24 +46,6 @@ async def search(
         "-c",
         help="Path to the `config.toml` file.",
     ),
-    timeout: int = typer.Option(
-        5,
-        "--timeout",
-        "-t",
-        help="Time in seconds to wait for an API response before retrying.",
-    ),
-    timeout_retries: int = typer.Option(
-        10,
-        "--timeout-retries",
-        "-r",
-        help="How much times in a row to redo a timed out request.",
-    ),
-    n_clients: int = typer.Option(
-        2,
-        "--n-clients",
-        "-n",
-        help="Number of Scopus Clients to use.",
-    ),
 ):
     """Searches the strings of the experiment on Scopus."""
     with Session() as session:
@@ -80,12 +62,7 @@ async def search(
             gs=slr.gs,
         )
 
-        clients_list = create_clients_list(
-            api_keys_list=config.scopus_api_keys,
-            n_clients=n_clients,
-            timeout=timeout,
-            timeout_retries=timeout_retries,
-        )
+        client = ScopusClient(config.scopus_api_keys)
 
         with Progress(
             TextColumn(
@@ -94,12 +71,42 @@ async def search(
             BarColumn(),
             TaskProgressColumn(),
         ) as progress:
-            multi_client_scopus_search = MultiClientScopusSearch(
-                clients_list=clients_list,
-                db_search_strings_list=search_strings_list,
-                search_string_performance_factory=search_string_performance_factory,
-                progress=progress,
-                session=session,
+            overall_task = progress.add_task(
+                "Overall",
+                total=len(search_strings_list),
             )
 
-            await multi_client_scopus_search.start()
+            for search_string in search_strings_list:
+                progress_task = progress.add_task(
+                    "Paginating",
+                )
+
+                results: list[SuccessResponse.Entry] = []
+
+                try:
+                    async for page in client.search(search_string.string):
+                        progress.update(
+                            progress_task,
+                            total=page.n_pages,
+                            advance=1,
+                        )
+
+                        results.extend(page.entries)
+
+                except InvalidStringError:
+                    print("The following string raised an InvalidStringError")
+                    print(search_string.string)
+
+                progress.remove_task(progress_task)
+
+                performance = search_string_performance_factory.create(
+                    search_string=search_string,
+                    scopus_studies_list=results,
+                )
+
+                session.add(performance)
+                session.commit()
+
+                progress.advance(overall_task)
+
+            progress.remove_task(overall_task)

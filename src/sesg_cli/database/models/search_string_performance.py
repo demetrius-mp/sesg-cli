@@ -1,5 +1,10 @@
 from typing import TYPE_CHECKING
 
+from sesg import graph
+from sesg.metrics import Metrics, preprocess_string, similarity_score
+from sesg.scopus import (
+    SuccessResponse,
+)
 from sqlalchemy import (
     Float,
     ForeignKey,
@@ -13,6 +18,7 @@ from sqlalchemy.orm import (
 
 from .association_tables import gs_in_bsb, gs_in_sb, gs_in_scopus, qgs_in_scopus
 from .base import Base
+
 
 if TYPE_CHECKING:
     from .search_string import SearchString
@@ -62,3 +68,90 @@ class SearchStringPerformance(Base):
         back_populates="performance",
         init=False,
     )
+
+
+class SearchStringPerformanceFactory:
+    def __init__(
+        self,
+        qgs: list["Study"],
+        gs: list["Study"],
+    ) -> None:
+        self.qgs = qgs
+        self.processed_qgs = [preprocess_string(s.title) for s in qgs]
+
+        self.gs = gs
+        self.processed_gs = [preprocess_string(s.title) for s in gs]
+
+        self.study_mapping: dict[int, "Study"] = {}
+        citation_edges: list[tuple[int, int]] = []
+        for s in gs:
+            self.study_mapping[s.id] = s
+            citation_edges.extend((s.id, ref.id) for ref in s.references)
+
+        self.directed_adjacency_list = graph.edges_to_adjacency_list(
+            edges=citation_edges,
+        )
+        self.undirected_adjacency_list = graph.edges_to_adjacency_list(
+            edges=citation_edges,
+            directed=False,
+        )
+
+    def create(
+        self,
+        search_string: "SearchString",
+        scopus_studies_list: list[SuccessResponse.Entry],
+    ) -> "SearchStringPerformance":
+        processed_scopus_titles = [
+            preprocess_string(s.title) for s in scopus_studies_list
+        ]
+
+        qgs_in_scopus = similarity_score(
+            small_set=self.processed_qgs,
+            other_set=processed_scopus_titles,
+        )
+        qgs_in_scopus = [self.qgs[i] for i, _ in qgs_in_scopus]
+
+        gs_in_scopus = similarity_score(
+            small_set=self.processed_gs,
+            other_set=processed_scopus_titles,
+        )
+        gs_in_scopus = [self.gs[i] for i, _ in gs_in_scopus]
+
+        gs_in_bsb = graph.serial_breadth_first_search(
+            adjacency_list=self.directed_adjacency_list,
+            starting_nodes=[s.id for s in gs_in_scopus],
+        )
+        gs_in_bsb = [self.study_mapping[s_id] for s_id in gs_in_bsb]
+
+        gs_in_sb = graph.serial_breadth_first_search(
+            adjacency_list=self.undirected_adjacency_list,
+            starting_nodes=[s.id for s in gs_in_scopus],
+        )
+        gs_in_sb = [self.study_mapping[s_id] for s_id in gs_in_sb]
+
+        metrics = Metrics(
+            gs_size=len(self.gs),
+            n_scopus_results=len(scopus_studies_list),
+            n_qgs_studies_in_scopus=len(qgs_in_scopus),
+            n_gs_studies_in_scopus=len(gs_in_scopus),
+            n_gs_studies_in_scopus_and_bsb=len(gs_in_bsb),
+            n_gs_studies_in_scopus_and_bsb_and_fsb=len(gs_in_sb),
+        )
+
+        return SearchStringPerformance(
+            n_qgs_in_scopus=len(qgs_in_scopus),
+            n_gs_in_scopus=len(gs_in_scopus),
+            n_gs_in_bsb=len(gs_in_bsb),
+            n_gs_in_sb=len(gs_in_sb),
+            qgs_in_scopus=qgs_in_scopus,
+            gs_in_scopus=gs_in_scopus,
+            gs_in_bsb=gs_in_bsb,
+            gs_in_sb=gs_in_sb,
+            n_scopus_results=metrics.n_scopus_results,
+            scopus_precision=metrics.scopus_precision,
+            scopus_recall=metrics.scopus_recall,
+            scopus_f1_score=metrics.scopus_f1_score,
+            bsb_recall=metrics.scopus_and_bsb_recall,
+            sb_recall=metrics.scopus_and_bsb_and_fsb_recall,
+            search_string_id=search_string.id,
+        )

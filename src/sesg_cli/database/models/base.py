@@ -8,7 +8,7 @@ class Base(DeclarativeBase, MappedAsDataclass):
     ...
 
     def to_string(self, keys: list[str]):
-        props: dict[str, str | int | float] = dict()
+        props: dict[str, str | int | float] = {}
 
         for key in keys:
             value = self.__getattribute__(key)

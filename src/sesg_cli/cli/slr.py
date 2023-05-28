@@ -7,6 +7,7 @@ from rich.progress import Progress
 from sesg_cli.database import Session
 from sesg_cli.database.models import SLR, Study
 
+
 app = typer.Typer(rich_markup_mode="markdown", help="Create a SLR.")
 
 
@@ -32,8 +33,8 @@ def create_from_json(
 
     slr = SLR.from_json(json_file_path)
 
-    sb_studies: list[SnowballingStudy] = list()
-    db_study_mapper: dict[int, Study] = dict()
+    sb_studies: list[SnowballingStudy] = []
+    db_study_mapper: dict[int, Study] = {}
 
     for study in slr.gs:
         with open(

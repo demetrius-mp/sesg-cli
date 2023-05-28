@@ -6,6 +6,7 @@ from sqlalchemy import (
 
 from .base import Base
 
+
 studies_citations = Table(
     "studies_citations",
     Base.metadata,

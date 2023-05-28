@@ -7,6 +7,7 @@ from sesg.graph import create_citation_graph, edges_to_adjacency_list
 from sesg_cli.database import Session
 from sesg_cli.database.models import SLR, SearchString
 
+
 app = typer.Typer(
     rich_markup_mode="markdown",
     help="Render citation graphs. A node represents a paper, and the directed edge `A -> B` means that paper `A` **references** paper `B` (or that paper `B` is **cited by** paper `A`).",  # noqa: E501
@@ -29,7 +30,7 @@ def render_slr(
 ):
     with Session() as session:
         slr = SLR.get_by_name(slr_name, session)
-        edges: list[tuple[int, int]] = list()
+        edges: list[tuple[int, int]] = []
         for s in slr.gs:
             edges.extend((s.node_id, ref.node_id) for ref in s.references)
 
@@ -77,7 +78,7 @@ def render_search_string(
             raise typer.Abort()
 
         slr = SLR.get_by_name(slr_name, session)
-        edges: list[tuple[int, int]] = list()
+        edges: list[tuple[int, int]] = []
         for s in slr.gs:
             edges.extend((s.node_id, ref.node_id) for ref in s.references)
 

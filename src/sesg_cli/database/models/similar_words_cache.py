@@ -9,6 +9,7 @@ from sqlalchemy.orm import (
 
 from .base import Base
 
+
 if TYPE_CHECKING:
     from .experiment import Experiment
     from .similar_words_cache_words import SimilarWord

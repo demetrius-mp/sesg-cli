@@ -4,6 +4,7 @@ import typer
 
 from sesg_cli.config import Config
 
+
 app = typer.Typer(rich_markup_mode="markdown", help="Create the `config.toml` file.")
 
 

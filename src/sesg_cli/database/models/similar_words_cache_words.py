@@ -12,6 +12,7 @@ from sqlalchemy.orm import (
 
 from .base import Base
 
+
 if TYPE_CHECKING:
     from .similar_words_cache import SimilarWordsCache
 

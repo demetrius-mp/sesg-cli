@@ -3,6 +3,7 @@ import typer
 from sesg_cli.database.connection import engine
 from sesg_cli.database.models.base import Base
 
+
 app = typer.Typer(rich_markup_mode="markdown", help="Create or drop the database.")
 
 

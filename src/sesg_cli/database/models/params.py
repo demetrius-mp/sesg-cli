@@ -2,7 +2,6 @@ from itertools import product
 from typing import TYPE_CHECKING, Optional
 
 from sesg.topic_extraction import TopicExtractionStrategy
-from sesg_cli.config import Config
 from sqlalchemy import (
     CheckConstraint,
     ForeignKey,
@@ -16,10 +15,13 @@ from sqlalchemy.orm import (
     relationship,
 )
 
+from sesg_cli.config import Config
+
 from .base import Base
 from .bertopic_params import BERTopicParams
 from .formulation_params import FormulationParams
 from .lda_params import LDAParams
+
 
 if TYPE_CHECKING:
     from .experiment import Experiment
