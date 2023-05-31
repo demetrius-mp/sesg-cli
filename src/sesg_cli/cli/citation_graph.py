@@ -2,7 +2,7 @@ from pathlib import Path
 
 import typer
 from rich import print
-from sesg.graph import create_citation_graph, edges_to_adjacency_list
+from sesg.evaluation import create_citation_graph
 
 from sesg_cli.database import Session
 from sesg_cli.database.models import SLR, SearchString
@@ -30,17 +30,10 @@ def render_slr(
 ):
     with Session() as session:
         slr = SLR.get_by_name(slr_name, session)
-        edges: list[tuple[int, int]] = []
-        for s in slr.gs:
-            edges.extend((s.node_id, ref.node_id) for ref in s.references)
-
-        if len(edges) == 0:
-            print("[red]Snowballing was never executed for this SLR.")
-            raise typer.Abort()
 
         g = create_citation_graph(
-            adjacency_list=edges_to_adjacency_list(edges=edges),
-            tooltips={s.node_id: s.title for s in slr.gs},
+            adjacency_list=slr.adjacency_list,
+            studies_titles={s.id: s.title for s in slr.gs},
         )
 
         g.render(
@@ -78,18 +71,11 @@ def render_search_string(
             raise typer.Abort()
 
         slr = SLR.get_by_name(slr_name, session)
-        edges: list[tuple[int, int]] = []
-        for s in slr.gs:
-            edges.extend((s.node_id, ref.node_id) for ref in s.references)
-
-        if len(edges) == 0:
-            print("[red]Snowballing was never executed for this SLR.")
-            raise typer.Abort()
 
         g = create_citation_graph(
-            adjacency_list=edges_to_adjacency_list(edges=edges),
-            tooltips={s.id: s.title for s in slr.gs},
-            results_list=[s.id for s in performance.gs_in_sb],
+            adjacency_list=slr.adjacency_list,
+            studies_titles={s.id: s.title for s in slr.gs},
+            start_set=[s.id for s in performance.gs_in_bsb],
         )
 
         g.attr(label=r"Dashed -> Not found\nBold -> Snowballing\nFilled -> Search")

@@ -1,5 +1,6 @@
 import json
 from dataclasses import dataclass
+from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
@@ -47,6 +48,23 @@ class SLR(Base):
         stmt = select(SLR).where(SLR.name == name)
 
         return session.execute(stmt).scalar_one()
+
+    @cached_property
+    def _study_mapping(self) -> dict[int, "Study"]:
+        return {s.id: s for s in self.gs}
+
+    def get_study_by_id(self, id: int) -> "Study":
+        return self._study_mapping[id]
+
+    @cached_property
+    def adjacency_list(
+        self,
+        use_node_id: bool = False,
+    ) -> dict[int, list[int]]:
+        if use_node_id:
+            return {s.node_id: [s.node_id for s in s.references] for s in self.gs}
+
+        return {s.id: [s.id for s in s.references] for s in self.gs}
 
     @classmethod
     def from_json(cls, path: Path) -> "SLR":

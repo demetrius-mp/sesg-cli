@@ -5,16 +5,14 @@ import trio
 import typer
 from rich import print
 from rich.progress import BarColumn, Progress, TaskProgressColumn, TextColumn
-from sesg.scopus import ScopusClient, SuccessResponse
-from sesg.scopus.client import InvalidStringError
+from sesg.evaluation.evaluation_factory import EvaluationFactory, Study
+from sesg.scopus import InvalidStringError, Page, ScopusClient
 
 from sesg_cli.config import Config
 from sesg_cli.database.connection import Session
 from sesg_cli.database.models import (
     Experiment,
-)
-from sesg_cli.database.models.search_string_performance import (
-    SearchStringPerformanceFactory,
+    SearchStringPerformance,
 )
 
 
@@ -57,9 +55,27 @@ async def search(
         print("Retrieving experiment search strings...")
         search_strings_list = experiment.get_search_strings_without_performance(session)
 
-        search_string_performance_factory = SearchStringPerformanceFactory(
-            qgs=experiment.qgs,
-            gs=slr.gs,
+        evaluation_gs = [
+            Study(
+                id=s.id,
+                title=s.title,
+                references=[Study(id=ref.id, title=ref.title) for ref in s.references],
+            )
+            for s in slr.gs
+        ]
+
+        evaluation_qgs = [
+            Study(
+                id=s.id,
+                title=s.title,
+                references=[Study(id=ref.id, title=ref.title) for ref in s.references],
+            )
+            for s in experiment.qgs
+        ]
+
+        evaluation_factory = EvaluationFactory(
+            gs=evaluation_gs,
+            qgs=evaluation_qgs,
         )
 
         client = ScopusClient(config.scopus_api_keys)
@@ -81,7 +97,7 @@ async def search(
                     "Paginating",
                 )
 
-                results: list[SuccessResponse.Entry] = []
+                results: list[Page.Entry] = []
 
                 try:
                     async for page in client.search(search_string.string):
@@ -99,9 +115,23 @@ async def search(
 
                 progress.remove_task(progress_task)
 
-                performance = search_string_performance_factory.create(
-                    search_string=search_string,
-                    scopus_studies_list=results,
+                evaluation = evaluation_factory.evaluate([r.title for r in results])
+                performance = SearchStringPerformance.from_studies_lists(
+                    n_scopus_results=len(results),
+                    qgs_in_scopus=[
+                        slr.get_study_by_id(s.id) for s in evaluation.qgs_in_scopus
+                    ],
+                    gs_in_scopus=[
+                        slr.get_study_by_id(s.id) for s in evaluation.gs_in_scopus
+                    ],
+                    gs_in_bsb=[slr.get_study_by_id(s.id) for s in evaluation.gs_in_bsb],
+                    gs_in_sb=[slr.get_study_by_id(s.id) for s in evaluation.gs_in_sb],
+                    start_set_precision=evaluation.start_set_precision,
+                    start_set_recall=evaluation.start_set_recall,
+                    start_set_f1_score=evaluation.start_set_f1_score,
+                    bsb_recall=evaluation.bsb_recall,
+                    sb_recall=evaluation.sb_recall,
+                    search_string_id=search_string.id,
                 )
 
                 session.add(performance)

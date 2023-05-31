@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from sesg import graph
 from sesg.metrics import Metrics, preprocess_string, similarity_score
 from sesg.scopus import (
-    SuccessResponse,
+    Page,
 )
 from sqlalchemy import (
     Float,
@@ -52,9 +52,9 @@ class SearchStringPerformance(Base):
         secondary=gs_in_sb,
     )
 
-    scopus_precision: Mapped[float] = mapped_column(Float())
-    scopus_recall: Mapped[float] = mapped_column(Float())
-    scopus_f1_score: Mapped[float] = mapped_column(Float())
+    start_set_precision: Mapped[float] = mapped_column(Float())
+    start_set_recall: Mapped[float] = mapped_column(Float())
+    start_set_f1_score: Mapped[float] = mapped_column(Float())
 
     bsb_recall: Mapped[float] = mapped_column(Float())
     sb_recall: Mapped[float] = mapped_column(Float())
@@ -68,6 +68,39 @@ class SearchStringPerformance(Base):
         back_populates="performance",
         init=False,
     )
+
+    @classmethod
+    def from_studies_lists(
+        cls,
+        n_scopus_results: int,
+        qgs_in_scopus: list["Study"],
+        gs_in_scopus: list["Study"],
+        gs_in_bsb: list["Study"],
+        gs_in_sb: list["Study"],
+        start_set_precision: float,
+        start_set_recall: float,
+        start_set_f1_score: float,
+        bsb_recall: float,
+        sb_recall: float,
+        search_string_id: int,
+    ) -> "SearchStringPerformance":
+        return SearchStringPerformance(
+            n_scopus_results=n_scopus_results,
+            qgs_in_scopus=qgs_in_scopus,
+            n_qgs_in_scopus=len(qgs_in_scopus),
+            gs_in_scopus=gs_in_scopus,
+            n_gs_in_scopus=len(gs_in_scopus),
+            gs_in_bsb=gs_in_bsb,
+            n_gs_in_bsb=len(gs_in_bsb),
+            gs_in_sb=gs_in_sb,
+            n_gs_in_sb=len(gs_in_sb),
+            start_set_precision=start_set_precision,
+            start_set_recall=start_set_recall,
+            start_set_f1_score=start_set_f1_score,
+            bsb_recall=bsb_recall,
+            sb_recall=sb_recall,
+            search_string_id=search_string_id,
+        )
 
 
 class SearchStringPerformanceFactory:
@@ -99,7 +132,7 @@ class SearchStringPerformanceFactory:
     def create(
         self,
         search_string: "SearchString",
-        scopus_studies_list: list[SuccessResponse.Entry],
+        scopus_studies_list: list[Page.Entry],
     ) -> "SearchStringPerformance":
         processed_scopus_titles = [
             preprocess_string(s.title) for s in scopus_studies_list
@@ -148,9 +181,9 @@ class SearchStringPerformanceFactory:
             gs_in_bsb=gs_in_bsb,
             gs_in_sb=gs_in_sb,
             n_scopus_results=metrics.n_scopus_results,
-            scopus_precision=metrics.scopus_precision,
-            scopus_recall=metrics.scopus_recall,
-            scopus_f1_score=metrics.scopus_f1_score,
+            start_set_precision=metrics.scopus_precision,
+            start_set_recall=metrics.scopus_recall,
+            start_set_f1_score=metrics.scopus_f1_score,
             bsb_recall=metrics.scopus_and_bsb_recall,
             sb_recall=metrics.scopus_and_bsb_and_fsb_recall,
             search_string_id=search_string.id,
