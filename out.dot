@@ -1,0 +1,60 @@
+strict digraph {
+	01 [style=dashed tooltip="A business goal-based approach to achieving systems engineering capability maturity"]
+	02 [style=dashed tooltip="Linking Software Process Improvement to Business Strategies: Experiences from Industry"]
+	03 [style=dashed tooltip="Bridging the Gap between Business Strategy and Software Development"]
+	04 [style=dashed tooltip="GQM+Strategies - Aligning business strategies with software measurement"]
+	05 [style=dashed tooltip="GQM + Strategies: A comprehensive methodology for aligning business strategies with software measurement"]
+	06 [style=dashed tooltip="Software Engineering Strategies: Aligning Software Process Improvement with Strategic Goals"]
+	07 [style=dashed tooltip="SPI: 'I can't get no satisfaction' - Directing process improvement to meet business needs"]
+	08 [style=dashed tooltip="Business-oriented software process improvement based on CMMI using QFD"]
+	09 [style=dashed tooltip="QFD Application in Software Process Management and Improvement Based on CMM"]
+	10 [style=dashed tooltip="The Rosetta Stone Methodology - A Benefits Driven Approach to Software Process Improvement"]
+	11 [style=dashed tooltip="The Rosetta Stone Methodology – A Benefits-Driven Approach to SPI"]
+	12 [style=dashed tooltip="Interfacing three complementary technologies: strategic planning, process modeling, and system dynamics"]
+	13 [style=dashed tooltip="An Approach to Support the Strategic Alignment of Software Process Improvement Programs"]
+	14 [style=dashed tooltip="Strategic Alignment of Software Process Improvement Programs Using QFD"]
+	15 [style=dashed tooltip="Application of GQM+Strategies(R) in the Japanese space industry"]
+	16 [style=dashed tooltip="Aligning Organizations Through Measurement: The GQM+Strategies Approach"]
+	17 [style=dashed tooltip="Experiences and insights from applying GQM+Strategies in a systems product development organisation"]
+	18 [style=dashed tooltip="Aligning Software-related Strategies in Multi-Organizational Settings"]
+	19 [style=dashed tooltip="Defining and Monitoring Strategically Aligned Software Improvement Goals"]
+	20 [style=dashed tooltip="Entropy based software processes improvement"]
+	21 [style=dashed tooltip="Integration of strategic management, process improvement and quantitative measurement for managing the competitiveness of software engineering organizations"]
+	22 [style=dashed tooltip="Managing process inconsistency using viewpoints"]
+	23 [style=dashed tooltip="Software Process Improvement: Supporting the Linking of the Software and the Business Strategies"]
+	24 [style=dashed tooltip="Business-oriented process improvement: practices and experiences at Thales Naval The Netherlands (TNNL)"]
+	25 [style=dashed tooltip="Business Objectives as Drivers for Process Improvement: Practices and Experiences at Thales Naval The Netherlands (TNNL)"]
+	26 [style=dashed tooltip="Strategically Balanced Process Adoption"]
+	27 [style=dashed tooltip="Applying and adjusting a software process improvement model in practice: the use of the IDEAL model in a small software enterprise"]
+	28 [style=dashed tooltip="Aggregating viewpoints for strategic software process improvement - a method and a case study"]
+	29 [style=dashed tooltip="Determining organization-specific process suitability"]
+	30 [style=dashed tooltip="Linking Software Development and Business Strategy through Measurement"]
+	08 -> 09
+	08 -> 14
+	10 -> 02
+	10 -> 07
+	10 -> 08
+	10 -> 11
+	11 -> 10
+	13 -> 09
+	13 -> 12
+	13 -> 14
+	14 -> 09
+	14 -> 12
+	15 -> 04
+	15 -> 18
+	16 -> 30
+	17 -> 18
+	17 -> 30
+	18 -> 04
+	18 -> 05
+	19 -> 04
+	19 -> 14
+	21 -> 20
+	21 -> 30
+	24 -> 02
+	25 -> 02
+	28 -> 22
+	29 -> 14
+	30 -> 03
+}

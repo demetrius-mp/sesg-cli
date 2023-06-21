@@ -56,7 +56,6 @@ class SLR(Base):
     def get_study_by_id(self, id: int) -> "Study":
         return self._study_mapping[id]
 
-    @cached_property
     def adjacency_list(
         self,
         use_node_id: bool = False,
