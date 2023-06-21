@@ -22,10 +22,14 @@ def create_from_json(
     ),
     txts_path: Path = typer.Argument(
         ...,
-        help="Path to a folder with the studies `.cermtxt` files.",
+        help="Path to a folder with the studies text files.",
         dir_okay=True,
         file_okay=False,
         exists=True,
+    ),
+    txts_extension: str = typer.Option(
+        ".txt",
+        help="Extension of the text files (.cermtxt, .txt).",
     ),
 ):
     """Creates a SLR from a `.json` file, along with backward snowballing."""
@@ -38,7 +42,7 @@ def create_from_json(
 
     for study in slr.gs:
         with open(
-            txts_path / f"{study.node_id}.cermtxt",
+            txts_path / f"{study.node_id}.{txts_extension}",
             "r",
             encoding="utf-8",
         ) as f:
