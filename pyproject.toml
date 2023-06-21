@@ -4,7 +4,7 @@ version = "0.0.1"
 description = "CLI to interact with SeSG"
 requires-python = "==3.10.10"
 dependencies = [
-  "sesg==0.0.48",
+  "sesg==0.0.50",
   "SQLAlchemy==2.0.15",
   "psycopg[binary,pool]==3.1.9",
   "tomli==2.0.1",
@@ -13,7 +13,7 @@ dependencies = [
   "python-dotenv==1.0.0",
   "typer[all]==0.9.0",
   "torch==2.0.0",
-  "transformers==4.29.2",
+  "transformers==4.30.2",
   "rich==13.3.5",
   "trio==0.22.0",
 ]
