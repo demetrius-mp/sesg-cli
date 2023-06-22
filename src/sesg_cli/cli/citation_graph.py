@@ -32,8 +32,8 @@ def render_slr(
         slr = SLR.get_by_name(slr_name, session)
 
         g = create_citation_graph(
-            adjacency_list=slr.adjacency_list,
-            studies_titles={s.id: s.title for s in slr.gs},
+            adjacency_list=slr.adjacency_list(use_node_id=True),
+            studies_titles={s.node_id: s.title for s in slr.gs},
         )
 
         g.render(
@@ -73,9 +73,9 @@ def render_search_string(
         slr = SLR.get_by_name(slr_name, session)
 
         g = create_citation_graph(
-            adjacency_list=slr.adjacency_list,
-            studies_titles={s.id: s.title for s in slr.gs},
-            start_set=[s.id for s in performance.gs_in_bsb],
+            adjacency_list=slr.adjacency_list(),
+            studies_titles={s.node_id: s.title for s in slr.gs},
+            start_set=[s.node_id for s in performance.gs_in_bsb],
         )
 
         g.attr(label=r"Dashed -> Not found\nBold -> Snowballing\nFilled -> Search")
