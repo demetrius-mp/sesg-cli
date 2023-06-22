@@ -29,12 +29,15 @@ def convert(
             paper_id: str = file.strip(".pdf")
 
             with open(slr_folder_path / f"pdfs\\{file}", "rb") as f:
-                reader: PyPDF2.PdfReader = PyPDF2.PdfReader(f)
-                text: str = ""
+                try:
+                    reader: PyPDF2.PdfReader = PyPDF2.PdfReader(f)
+                    text: str = ""
 
-                for page_num in range(len(reader.pages)):
-                    page = reader.pages[page_num]
-                    text += page.extract_text()
+                    for page_num in range(len(reader.pages)):
+                        page = reader.pages[page_num]
+                        text += page.extract_text()
+                except Exception as e:
+                    print(f"File: {file}\nError: {e}")
 
                 with open(
                     slr_folder_path / f"txts\\{paper_id}.txt",
