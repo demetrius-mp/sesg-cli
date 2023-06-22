@@ -28,8 +28,8 @@ def create_from_json(
         exists=True,
     ),
     txts_extension: str = typer.Option(
-        ".txt",
-        help="Extension of the text files (.cermtxt, .txt).",
+        "txt",
+        help="Extension of the text files (cermtxt, txt).",
     ),
 ):
     """Creates a SLR from a `.json` file, along with backward snowballing."""
