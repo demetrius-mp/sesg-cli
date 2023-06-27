@@ -65,7 +65,7 @@ def start(
         extract_topics_with_bertopic,
         extract_topics_with_lda,
     )
-    from transformers import BertForMaskedLM, BertTokenizer, logging
+    from transformers import BertForMaskedLM, BertTokenizer, logging  # type: ignore
 
     logging.set_verbosity_error()
 
