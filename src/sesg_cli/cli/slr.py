@@ -33,11 +33,14 @@ def create_from_json(
     ),
 ):
     """Creates a SLR from a `.json` file, along with backward snowballing."""
-    from sesg.snowballing import SnowballingStudy, fuzzy_backward_snowballing
+    from sesg.snowballing import (
+        FuzzyBackwardSnowballingStudy,
+        fuzzy_backward_snowballing,
+    )
 
     slr = SLR.from_json(json_file_path)
 
-    sb_studies: list[SnowballingStudy] = []
+    sb_studies: list[FuzzyBackwardSnowballingStudy] = []
     db_study_mapper: dict[int, Study] = {}
 
     for study in slr.gs:
@@ -48,7 +51,7 @@ def create_from_json(
         ) as f:
             text_content = f.read()
 
-        sb_study = SnowballingStudy(
+        sb_study = FuzzyBackwardSnowballingStudy(
             id=study.node_id,
             title=study.title,
             text_content=text_content,
