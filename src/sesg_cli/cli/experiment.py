@@ -15,7 +15,6 @@ from sesg_cli.database.models import (
     Params,
     SearchString,
 )
-from sesg_cli.similar_words_generator_cache import SimilarWordsGeneratorCache
 
 
 app = typer.Typer(rich_markup_mode="markdown", help="Start an experiment for a SLR.")
@@ -60,6 +59,8 @@ def start(
         extract_topics_with_lda,
     )
     from transformers import BertForMaskedLM, BertTokenizer, logging  # type: ignore
+
+    from sesg_cli.similar_words_generator_cache import SimilarWordsGeneratorCache
 
     logging.set_verbosity_error()
 

@@ -1,7 +1,7 @@
 from itertools import product
 from typing import TYPE_CHECKING, Optional
 
-from sesg.topic_extraction import TopicExtractionStrategy
+from sesg.topic_extraction.strategies_enum import TopicExtractionStrategy
 from sqlalchemy import (
     CheckConstraint,
     ForeignKey,
