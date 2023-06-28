@@ -5,7 +5,7 @@ import trio
 import typer
 from rich import print
 from rich.progress import BarColumn, Progress, TaskProgressColumn, TextColumn
-from sesg.evaluation.evaluation_factory import EvaluationFactory, Study
+from sesg.evaluation import EvaluationFactory, Study
 from sesg.scopus import InvalidStringError, Page, ScopusClient
 
 from sesg_cli.config import Config
