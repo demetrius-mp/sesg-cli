@@ -2,7 +2,6 @@ from pathlib import Path
 
 import typer
 from rich import print
-from sesg.evaluation import create_citation_graph
 
 from sesg_cli.database import Session
 from sesg_cli.database.models import SLR, SearchString
@@ -28,6 +27,8 @@ def render_slr(
         help="Name of the Systematic Literature Review",
     ),
 ):
+    from sesg.evaluation import create_citation_graph
+
     with Session() as session:
         slr = SLR.get_by_name(slr_name, session)
 
@@ -62,6 +63,8 @@ def render_search_string(
         help="Id of the search string to render",
     ),
 ):
+    from sesg.evaluation import create_citation_graph
+
     with Session() as session:
         search_string = SearchString.get_by_id(search_string_id, session)
         performance = search_string.performance

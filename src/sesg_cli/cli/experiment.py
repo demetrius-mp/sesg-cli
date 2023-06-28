@@ -1,17 +1,11 @@
-import warnings
 from pathlib import Path
 from random import sample
 from typing import Any
 
 import typer
-from numba.core.errors import NumbaDeprecationWarning
 from rich import print
 from rich.progress import Progress
-from sesg.search_string import (
-    SimilarWordsFinder,
-    set_pub_year_boundaries,
-)
-from sesg.topic_extraction import TopicExtractionStrategy
+from sesg.topic_extraction.strategies_enum import TopicExtractionStrategy
 
 from sesg_cli.config import Config
 from sesg_cli.database.connection import Session
@@ -21,10 +15,7 @@ from sesg_cli.database.models import (
     Params,
     SearchString,
 )
-from sesg_cli.similar_words_finder_cache import Cache
 
-
-warnings.simplefilter("ignore", category=NumbaDeprecationWarning)
 
 app = typer.Typer(rich_markup_mode="markdown", help="Start an experiment for a SLR.")
 
@@ -60,12 +51,16 @@ def start(
     Will only generate strings using unseen parameters from the config file. If a string was already
     generated for this experiment using a set of parameters for the strategy, will skip it.
     """  # noqa: E501
-    from sesg.search_string import generate_search_string
+    # from sesg.search_string import generate_search_string
+    from sesg.search_string import generate_search_string, set_pub_year_boundaries
+    from sesg.similar_words.bert_strategy import BertSimilarWordsGenerator
     from sesg.topic_extraction import (
         extract_topics_with_bertopic,
         extract_topics_with_lda,
     )
     from transformers import BertForMaskedLM, BertTokenizer, logging  # type: ignore
+
+    from sesg_cli.similar_words_generator_cache import SimilarWordsGeneratorCache
 
     logging.set_verbosity_error()
 
@@ -111,11 +106,14 @@ def start(
         bert_model: Any = BertForMaskedLM.from_pretrained("bert-base-uncased")
         bert_model.eval()
 
-        similar_words_finder = SimilarWordsFinder(
-            enrichment_text=enrichment_text,
-            bert_model=bert_model,
-            bert_tokenizer=bert_tokenizer,
-            cache=Cache(session=session, experiment_id=experiment.id),
+        similar_words_generator = SimilarWordsGeneratorCache(
+            bert_generator=BertSimilarWordsGenerator(
+                enrichment_text=enrichment_text,
+                bert_model=bert_model,
+                bert_tokenizer=bert_tokenizer,
+            ),
+            experiment_id=experiment.id,
+            session=session,
         )
 
         with Progress() as progress:
@@ -185,10 +183,10 @@ def start(
                     formulation_params = params.formulation_params
 
                     string = generate_search_string(
-                        topics_list=topics_list,
-                        n_words_per_topic=formulation_params.n_words_per_topic,
+                        topics=topics_list,
                         n_similar_words_per_word=formulation_params.n_similar_words_per_word,
-                        similar_words_finder=similar_words_finder,
+                        n_words_per_topic=formulation_params.n_words_per_topic,
+                        similar_words_generator=similar_words_generator,
                     )
 
                     string = f"TITLE-ABS-KEY({string})"

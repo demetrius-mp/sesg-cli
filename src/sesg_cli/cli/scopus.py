@@ -5,8 +5,6 @@ import trio
 import typer
 from rich import print
 from rich.progress import BarColumn, Progress, TaskProgressColumn, TextColumn
-from sesg.evaluation.evaluation_factory import EvaluationFactory, Study
-from sesg.scopus import InvalidStringError, Page, ScopusClient
 
 from sesg_cli.config import Config
 from sesg_cli.database.connection import Session
@@ -46,6 +44,9 @@ async def search(
     ),
 ):
     """Searches the strings of the experiment on Scopus."""
+    from sesg.evaluation import EvaluationFactory, Study
+    from sesg.scopus import InvalidStringError, Page, ScopusClient
+
     with Session() as session:
         experiment = Experiment.get_by_name(experiment_name, session)
         slr = experiment.slr

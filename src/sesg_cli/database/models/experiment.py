@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sesg.search_string import create_enrichment_text
-from sesg.topic_extraction import create_docs
+from sesg.topic_extraction.create_docs import create_docs
 from sqlalchemy import (
     ForeignKey,
     Text,
@@ -121,7 +120,9 @@ class Experiment(Base):
         return docs
 
     def get_enrichment_text(self):
-        enrichment_text = create_enrichment_text(
+        from sesg.similar_words.bert_strategy import BertSimilarWordsGenerator
+
+        enrichment_text = BertSimilarWordsGenerator.create_enrichment_text(
             [
                 {
                     "abstract": s.abstract,
