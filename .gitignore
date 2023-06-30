@@ -164,4 +164,3 @@ config.toml
 .idea/
 docker-compose.yml
 data/
-```
