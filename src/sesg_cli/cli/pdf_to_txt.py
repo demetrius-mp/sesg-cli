@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 import PyPDF2
@@ -12,43 +11,47 @@ app = typer.Typer(
 
 @app.command()
 def convert(
-    slr_folder_path: Path = typer.Argument(
-        ...,
-        help="Path to pdfs folder to be converted",
-        dir_okay=True,
-        exists=True,
-    )
+        pdfs_folder_path: Path = typer.Argument(
+            ...,
+            help="Path to the pdfs folder that will be converted",
+            dir_okay=True,
+            exists=True,
+        )
 ):
-    files: list[str] = os.listdir(f"{slr_folder_path}\\pdfs")
+    files: list[Path] = [file for file in pdfs_folder_path.iterdir()]
+
+    txts_folder_path: Path = pdfs_folder_path.parent.joinpath("txts")
+    txts_folder_path.mkdir(parents=True, exist_ok=True)
 
     with Progress() as progress:
         convertion_progress = progress.add_task(
             "[green]Converting...", total=len(files)
         )
-        for index, file in enumerate(files):
-            paper_id: str = file.strip(".pdf")
+        for file in files:
+            paper_id: str = file.name.strip(".pdf")
 
-            with open(slr_folder_path / f"pdfs\\{file}", "rb") as f:
+            with open(file, "rb") as pdf:
                 try:
-                    reader: PyPDF2.PdfReader = PyPDF2.PdfReader(f)
+                    reader: PyPDF2.PdfReader = PyPDF2.PdfReader(pdf)
                     text: str = ""
 
                     for page_num in range(len(reader.pages)):
                         page = reader.pages[page_num]
                         text += page.extract_text()
+
                 except Exception as e:
                     print(f"File: {file}\nError: {e}")
 
                 with open(
-                    slr_folder_path / f"txts\\{paper_id}.txt",
-                    "w",
-                    encoding="utf-8",
+                        txts_folder_path.joinpath(f"{paper_id}.txt"),
+                        "w",
+                        encoding="utf-8",
                 ) as f:
                     f.write(text)
 
             progress.update(
                 convertion_progress,
-                description=f"[green]Converting {index+1} of {len(files)}",
+                description=f"[green]Converting {paper_id} of {len(files)}",
                 advance=1,
                 refresh=True,
             )
