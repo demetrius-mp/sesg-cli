@@ -161,3 +161,6 @@ cython_debug/
 
 sesg-slrs/
 config.toml
+.idea/
+docker-compose.yml
+data/
