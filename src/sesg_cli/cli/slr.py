@@ -4,7 +4,7 @@ import typer
 from rich import print
 from rich.progress import Progress
 
-from sesg_cli.database import Session
+from sesg_cli.database.connection import Session
 from sesg_cli.database.models import SLR, Study
 
 

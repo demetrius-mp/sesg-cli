@@ -1,7 +1,6 @@
 from itertools import product
 from typing import TYPE_CHECKING, Optional
 
-from sesg.topic_extraction.strategies_enum import TopicExtractionStrategy
 from sqlalchemy import (
     CheckConstraint,
     ForeignKey,
@@ -16,6 +15,7 @@ from sqlalchemy.orm import (
 )
 
 from sesg_cli.config import Config
+from sesg_cli.topic_extraction_strategies import TopicExtractionStrategy
 
 from .base import Base
 from .bertopic_params import BERTopicParams
@@ -155,7 +155,7 @@ class Params(Base):
     @classmethod
     def create_with_strategy(
         cls,
-        strategy: TopicExtractionStrategy,
+        strategy: "TopicExtractionStrategy",
         config: Config,
         experiment_id: int,
         session: Session,
