@@ -28,11 +28,11 @@ def convert(
         )
         for file in files:
             paper_id: str = file.name.strip(".pdf")
+            text = ""
 
             with open(file, "rb") as pdf:
                 try:
                     reader: PyPDF2.PdfReader = PyPDF2.PdfReader(pdf)
-                    text: str = ""
 
                     for page_num in range(len(reader.pages)):
                         page = reader.pages[page_num]
