@@ -4,16 +4,18 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
+    text
 )
 from sqlalchemy.orm import (
     Mapped,
     mapped_column,
     relationship,
+    Session
 )
 
 from .association_tables import gs_in_bsb, gs_in_sb, gs_in_scopus, qgs_in_scopus
 from .base import Base
-
+from sesg_cli.database.util.results_queries import ResultQuery
 
 if TYPE_CHECKING:
     from .search_string import SearchString
@@ -96,3 +98,27 @@ class SearchStringPerformance(Base):
             sb_recall=sb_recall,
             search_string_id=search_string_id,
         )
+
+    @staticmethod
+    def get_results(slr: str, session: Session) -> dict[str: dict]:
+        """
+        Responsible for retrieving all the data needed to construct a results Excel file.
+
+        Args:
+            slr: the review that the results will be extracted.
+            session: db session.
+
+        Returns: a dictionary with the following structure:
+            {'query_name': {'columns': all the columns that were in the select statement
+                            'data': all the Rows resulting of the query}}
+
+        """
+        queries: dict = ResultQuery(slr).get_queries()
+        results: dict = dict()
+
+        for key, query in queries.items():
+            cursor = session.execute(text(query))
+            exec_results = cursor.fetchall()
+            results[key] = {'columns': tuple(cursor.keys()), 'data': exec_results}
+
+        return results
