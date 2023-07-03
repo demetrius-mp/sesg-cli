@@ -4,21 +4,20 @@ import PyPDF2
 import typer
 from rich.progress import Progress
 
-app = typer.Typer(
-    rich_markup_mode="markdown", help="Convert pdfs to txt"
-)
+
+app = typer.Typer(rich_markup_mode="markdown", help="Convert pdfs to txt")
 
 
 @app.command()
 def convert(
-        pdfs_folder_path: Path = typer.Argument(
-            ...,
-            help="Path to the pdfs folder that will be converted",
-            dir_okay=True,
-            exists=True,
-        )
+    pdfs_folder_path: Path = typer.Argument(
+        ...,
+        help="Path to the pdfs folder that will be converted",
+        dir_okay=True,
+        exists=True,
+    )
 ):
-    files: list[Path] = [file for file in pdfs_folder_path.iterdir()]
+    files: list[Path] = list(pdfs_folder_path.iterdir())
 
     txts_folder_path: Path = pdfs_folder_path.parent.joinpath("txts")
     txts_folder_path.mkdir(parents=True, exist_ok=True)
@@ -29,11 +28,11 @@ def convert(
         )
         for file in files:
             paper_id: str = file.name.strip(".pdf")
+            text = ""
 
             with open(file, "rb") as pdf:
                 try:
                     reader: PyPDF2.PdfReader = PyPDF2.PdfReader(pdf)
-                    text: str = ""
 
                     for page_num in range(len(reader.pages)):
                         page = reader.pages[page_num]
@@ -43,9 +42,9 @@ def convert(
                     print(f"File: {file}\nError: {e}")
 
                 with open(
-                        txts_folder_path.joinpath(f"{paper_id}.txt"),
-                        "w",
-                        encoding="utf-8",
+                    txts_folder_path.joinpath(f"{paper_id}.txt"),
+                    "w",
+                    encoding="utf-8",
                 ) as f:
                     f.write(text)
 

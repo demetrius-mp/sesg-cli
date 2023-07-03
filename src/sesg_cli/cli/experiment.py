@@ -5,7 +5,6 @@ from typing import Any
 import typer
 from rich import print
 from rich.progress import Progress
-from sesg.topic_extraction.strategies_enum import TopicExtractionStrategy
 
 from sesg_cli.config import Config
 from sesg_cli.database.connection import Session
@@ -15,6 +14,7 @@ from sesg_cli.database.models import (
     Params,
     SearchString,
 )
+from sesg_cli.topic_extraction_strategies import TopicExtractionStrategy
 
 
 app = typer.Typer(rich_markup_mode="markdown", help="Start an experiment for a SLR.")
@@ -51,7 +51,6 @@ def start(
     Will only generate strings using unseen parameters from the config file. If a string was already
     generated for this experiment using a set of parameters for the strategy, will skip it.
     """  # noqa: E501
-    # from sesg.search_string import generate_search_string
     from sesg.search_string import generate_search_string, set_pub_year_boundaries
     from sesg.similar_words.bert_strategy import BertSimilarWordsGenerator
     from sesg.topic_extraction import (

@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 
-from sesg.topic_extraction.create_docs import create_docs
 from sqlalchemy import (
     ForeignKey,
     Text,
@@ -106,6 +105,8 @@ class Experiment(Base):
         return list(unique_results.values())
 
     def get_docs(self):
+        from sesg.topic_extraction.create_docs import create_docs
+
         docs = create_docs(
             [
                 {
