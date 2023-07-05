@@ -22,6 +22,10 @@ if TYPE_CHECKING:
     from .study import Study
 
 
+class ReviewDoesNotExist(Exception):
+    """The review passed as a param does not exist in the database."""
+
+
 class SearchStringPerformance(Base):
     __tablename__ = "search_string_performance"
 
@@ -100,25 +104,31 @@ class SearchStringPerformance(Base):
         )
 
     @staticmethod
-    def get_results(slr: str, session: Session) -> dict[str: dict]:
+    def get_results(result_query: ResultQuery, session: Session) -> dict[str, dict]:
         """
         Responsible for retrieving all the data needed to construct a results Excel file.
 
         Args:
-            slr: the review that the results will be extracted.
-            session: db session.
+            result_query: A ResultQuery object to get all the necessary queries to compose the final
+            Excel file.
+            session: A db session.
 
         Returns: a dictionary with the following structure:
-            {'query_name': {'columns': all the columns that were in the select statement
+            {'{query_name}': {'columns': all the columns that were in the select statement
                             'data': all the Rows resulting of the query}}
 
         """
-        queries: dict = ResultQuery(slr).get_queries()
+        queries, check_review = result_query.get_queries()
         results: dict = dict()
 
-        for key, query in queries.items():
+        review_exists: bool = session.execute(text(check_review)).scalar()
+
+        if not review_exists:
+            raise ReviewDoesNotExist()
+
+        for query_name, query in queries.items():
             cursor = session.execute(text(query))
             exec_results = cursor.fetchall()
-            results[key] = {'columns': tuple(cursor.keys()), 'data': exec_results}
+            results[query_name] = {'columns': tuple(cursor.keys()), 'data': exec_results}
 
         return results
