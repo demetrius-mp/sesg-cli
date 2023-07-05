@@ -2,17 +2,28 @@ import typer
 import pandas as pd
 
 from pathlib import Path
+from rich.progress import Progress
+from typing import NoReturn
+
 from sesg_cli.database.models import SearchStringPerformance
 from sesg_cli.database import Session
 from sesg_cli.database.util.results_queries import ResultQuery
-from rich.progress import Progress
 
-_AVAILABLE_METRICS = ["`st_f1_score`", "`bsb_recall`", "`final_recall`"]
-_DEFAULT_METRICS = ["`st_precision`", "`st_recall`"]
+_AVAILABLE_METRICS = ["st_f1_score", "bsb_recall", "final_recall"]
+_DEFAULT_METRICS = ["st_precision", "st_recall"]
+_IMPLEMENTED_ALGORITHMS = ["lda", "bt"]
 
 app = typer.Typer(
     rich_markup_mode="markdown", help="Get experiments' results"
 )
+
+
+class InvalidMetric(Exception):
+    """The metric passed as a parameter is not valid"""
+
+
+class InvalidAlgorithm(Exception):
+    """The algorithm passed as a parameter is not valid"""
 
 
 @app.command(help='Creates a Excel file based on the given Path and SLR')
@@ -30,14 +41,19 @@ def save(
         metrics: list[str] = typer.Option(
             default=None,
             help="Bonus metrics to order the results and generate bonus top 10 lists. "
-                 f"Available metrics: {_AVAILABLE_METRICS} (outside the defaults: {_DEFAULT_METRICS})"
+                 f"Available metrics: {[f'`{i}`' for i in _AVAILABLE_METRICS]} "
+                 f"(outside the defaults: {[f'`{i}`' for i in _DEFAULT_METRICS]})",
+            show_default=False
         ),
         algorithms: list[str] = typer.Option(
             default=None,
-            help="Bonus algorithms to generate Excel tabs such as `lda` or `bt`. Important: a base query for the "
-                 "algorithm need to be previously implemented."
+            help=f"Bonus algorithms to generate Excel (outside the defaults: {[f'`{i}`' for i in _IMPLEMENTED_ALGORITHMS]}). "
+                 f"Important: a base query for the algorithm need to be previously implemented.",
+            hidden=True
         )
 ):
+    verify_metrics_and_algorithms(metrics, algorithms)
+
     print("Retrieving information from database...")
 
     results_query: ResultQuery = ResultQuery(slr, metrics, algorithms)
@@ -67,3 +83,15 @@ def save(
                     advance=1,
                     refresh=True,
                 )
+
+
+def verify_metrics_and_algorithms(metrics: list[str] | None, algorithms: list[str] | None) -> NoReturn:
+    if metrics:
+        for metric in metrics:
+            if metric not in _AVAILABLE_METRICS:
+                raise InvalidMetric()
+
+    if algorithms:
+        for algorithm in algorithms:
+            if algorithm not in _IMPLEMENTED_ALGORITHMS:
+                raise InvalidAlgorithm()
