@@ -12,7 +12,7 @@ class ResultQuery:
             bonus_metrics: list[str] | None = None,
             bonus_algorithms: list[str] | None = None
     ):
-        self.results_queries: dict[str: str] = {
+        self.results_queries: dict[str, str] = {
             'lda': f"""select distinct on (ssp.search_string_id) ssp.search_string_id,
                     ssp.start_set_precision as st_precision,
                     ssp.start_set_recall as st_recall,
