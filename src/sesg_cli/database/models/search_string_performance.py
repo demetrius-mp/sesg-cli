@@ -15,7 +15,6 @@ from sqlalchemy.orm import (
 
 from .association_tables import gs_in_bsb, gs_in_sb, gs_in_scopus, qgs_in_scopus
 from .base import Base
-from sesg_cli.database.util.results_queries import ResultQuery
 
 if TYPE_CHECKING:
     from .search_string import SearchString
@@ -72,18 +71,18 @@ class SearchStringPerformance(Base):
 
     @classmethod
     def from_studies_lists(
-        cls,
-        n_scopus_results: int,
-        qgs_in_scopus: list["Study"],
-        gs_in_scopus: list["Study"],
-        gs_in_bsb: list["Study"],
-        gs_in_sb: list["Study"],
-        start_set_precision: float,
-        start_set_recall: float,
-        start_set_f1_score: float,
-        bsb_recall: float,
-        sb_recall: float,
-        search_string_id: int,
+            cls,
+            n_scopus_results: int,
+            qgs_in_scopus: list["Study"],
+            gs_in_scopus: list["Study"],
+            gs_in_bsb: list["Study"],
+            gs_in_sb: list["Study"],
+            start_set_precision: float,
+            start_set_recall: float,
+            start_set_f1_score: float,
+            bsb_recall: float,
+            sb_recall: float,
+            search_string_id: int,
     ) -> "SearchStringPerformance":
         return SearchStringPerformance(
             n_scopus_results=n_scopus_results,
@@ -104,13 +103,13 @@ class SearchStringPerformance(Base):
         )
 
     @staticmethod
-    def get_results(result_query: ResultQuery, session: Session) -> dict[str, dict]:
+    def get_results(queries: dict[str, str], check_review_query: str, session: Session) -> dict[str, dict]:
         """
         Responsible for retrieving all the data needed to construct a results Excel file.
 
         Args:
-            result_query: A ResultQuery object to get all the necessary queries to compose the final
-            Excel file.
+            queries: all the queries necessary to compose the final Excel file.
+            check_review_query: query to ensure the SLR exists.
             session: A db session.
 
         Returns: a dictionary with the following structure:
@@ -118,10 +117,9 @@ class SearchStringPerformance(Base):
                             'data': all the Rows resulting of the query}}
 
         """
-        queries, check_review = result_query.get_queries()
         results: dict = dict()
 
-        review_exists: bool = session.execute(text(check_review)).scalar()
+        review_exists: bool = session.execute(text(check_review_query)).scalar()
 
         if not review_exists:
             raise ReviewDoesNotExist()

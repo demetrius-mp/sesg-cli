@@ -9,8 +9,8 @@ from sesg_cli.database.models import SearchStringPerformance
 from sesg_cli.database import Session
 from sesg_cli.database.util.results_queries import ResultQuery
 
-_AVAILABLE_METRICS = ["st_f1_score", "bsb_recall", "final_recall"]
-_DEFAULT_METRICS = ["st_precision", "st_recall"]
+_AVAILABLE_METRICS = ["start_set_f1_score", "bsb_recall", "sb_recall"]
+_DEFAULT_METRICS = ["start_set_precision", "start_set_recall"]
 _IMPLEMENTED_ALGORITHMS = ["lda", "bt"]
 
 app = typer.Typer(
@@ -26,7 +26,7 @@ class InvalidAlgorithm(Exception):
     """The algorithm passed as a parameter is not valid"""
 
 
-@app.command(help='Creates a Excel file based on the given Path and SLR')
+@app.command(help='Creates a Excel file based on the given Path and SLR.')
 def save(
         path: Path = typer.Argument(
             ...,
@@ -56,13 +56,65 @@ def save(
 
     print("Retrieving information from database...")
 
-    results_query: ResultQuery = ResultQuery(slr, metrics, algorithms)
+    result_query: ResultQuery = ResultQuery(slr, metrics, algorithms)
+    queries = result_query.get_queries()
 
     with Session() as session:
-        results = SearchStringPerformance.get_results(results_query, session)
+        results = SearchStringPerformance.get_results(queries, result_query.check_review, session)
 
     excel_writer = pd.ExcelWriter(path / f"{slr}.xlsx", engine='xlsxwriter')
 
+    save_xlsx(excel_writer, results)
+
+
+@app.command(help='Creates a Excel file with the best `row_num` '
+                  'results from each experiment based on the given Path and SLR.')
+def save_by_row(
+        path: Path = typer.Argument(
+            ...,
+            help="Path where the results Excel file should be saved.",
+            dir_okay=True,
+            exists=True,
+        ),
+        slr: str = typer.Argument(
+            ...,
+            help="Name of the SLR the results will be extracted."
+        ),
+        row_num: int = typer.Argument(
+            ...,
+            help="Number of best results per experiment to be retrieved."
+        ),
+        metrics: list[str] = typer.Option(
+            default=None,
+            help="Bonus metrics to order the results and generate bonus lists. "
+                 f"Available metrics: {[f'`{i}`' for i in _AVAILABLE_METRICS]} "
+                 f"(outside the defaults: {[f'`{i}`' for i in _DEFAULT_METRICS]})",
+            show_default=False
+        ),
+        algorithms: list[str] = typer.Option(
+            default=None,
+            help=f"Bonus algorithms to generate Excel sheets "
+                 f"(outside the defaults: {[f'`{i}`' for i in _IMPLEMENTED_ALGORITHMS]}). "
+                 f"Important: a base query for the algorithm need to be previously implemented.",
+            hidden=True
+        )
+):
+    verify_metrics_and_algorithms(metrics, algorithms)
+
+    print("Retrieving information from database...")
+
+    result_query: ResultQuery = ResultQuery(slr, metrics, algorithms, row_num)
+    queries = result_query.get_queries_by_row()
+
+    with Session() as session:
+        results = SearchStringPerformance.get_results(queries, result_query.check_review, session)
+
+    excel_writer = pd.ExcelWriter(path / f"{slr}_by_row_num.xlsx", engine='xlsxwriter')
+
+    save_xlsx(excel_writer, results)
+
+
+def save_xlsx(excel_writer: pd.ExcelWriter, results: dict[str, dict]):
     with Progress() as progress:
         saving_progress = progress.add_task(
             "[green]Saving...", total=len(results)
