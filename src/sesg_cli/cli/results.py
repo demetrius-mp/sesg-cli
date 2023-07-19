@@ -14,7 +14,7 @@ _DEFAULT_METRICS = ["start_set_precision", "start_set_recall"]
 _IMPLEMENTED_ALGORITHMS = ["lda", "bt"]
 
 app = typer.Typer(
-    rich_markup_mode="markdown", help="Get experiments' results"
+    rich_markup_mode="markdown", help="Get experiments' results."
 )
 
 
