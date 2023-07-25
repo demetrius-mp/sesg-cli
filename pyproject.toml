@@ -15,7 +15,6 @@ dependencies = [
   "torch==2.0.0",
   "transformers==4.30.2",
   "rich==13.3.5",
-  "trio==0.22.0",
   "pypdf2==3.0.1"
 ]
 
