@@ -1,7 +1,7 @@
-from functools import partial, wraps
+import asyncio
+from functools import wraps
 from pathlib import Path
 
-import trio
 import typer
 from rich import print
 from rich.progress import BarColumn, Progress, TaskProgressColumn, TextColumn
@@ -19,7 +19,7 @@ class AsyncTyper(typer.Typer):
         def decorator(async_func):
             @wraps(async_func)
             def sync_func(*_args, **_kwargs):
-                return trio.run(partial(async_func, *_args, **_kwargs))
+                return asyncio.run(async_func(*_args, **_kwargs))
 
             self.command(*args, **kwargs)(sync_func)
             return async_func
