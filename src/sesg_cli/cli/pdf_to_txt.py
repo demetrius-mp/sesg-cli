@@ -26,8 +26,8 @@ def convert(
         convertion_progress = progress.add_task(
             "[green]Converting...", total=len(files)
         )
-        for file in files:
-            paper_id: str = file.name.strip(".pdf")
+        for idx, file in enumerate(files):
+            paper_id: str = file.stem
             text = ""
 
             with open(file, "rb") as pdf:
@@ -50,7 +50,7 @@ def convert(
 
             progress.update(
                 convertion_progress,
-                description=f"[green]Converting {paper_id} of {len(files)}",
+                description=f"[green]Converting {idx+1} of {len(files)}",
                 advance=1,
                 refresh=True,
             )
