@@ -100,7 +100,7 @@ def save(
     save_xlsx(excel_writer, results)
 
 
-@app.command(help='Creates a Excel file with the best `row_num` '
+@app.command(help='Creates a Excel file with the best `top` '
                   'results from each experiment based on the given Path and SLR.')
 def save_by_row(
         path: Path = typer.Argument(
@@ -113,9 +113,9 @@ def save_by_row(
             ...,
             help="Name of the SLR the results will be extracted."
         ),
-        row_num: int = typer.Argument(
-            ...,
-            help="Number of best results per experiment to be retrieved."
+        top: int = typer.Option(
+            default=10,
+            help="Number of best results per experiment to be retrieved.",
         ),
         metrics: list[str] = typer.Option(
             default=None,
@@ -136,12 +136,12 @@ def save_by_row(
 
     print("Retrieving information from database...")
 
-    result_query: ResultQuery = ResultQuery(slr, metrics, algorithms, row_num)
+    result_query: ResultQuery = ResultQuery(slr, metrics, algorithms, top)
     queries = result_query.get_queries_by_row()
 
     with Session() as session:
         results = SearchStringPerformance.get_results(queries, result_query.check_review, session)
 
-    excel_writer = pd.ExcelWriter(path / f"{slr}_by_row_num.xlsx", engine='xlsxwriter')
+    excel_writer = pd.ExcelWriter(path / f"{slr}_top_per_exp.xlsx", engine='xlsxwriter')
 
     save_xlsx(excel_writer, results)
