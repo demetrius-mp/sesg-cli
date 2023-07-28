@@ -63,7 +63,7 @@ def save_xlsx(excel_writer: pd.ExcelWriter, results: dict[str, dict]):
 def save(
         path: Path = typer.Argument(
             ...,
-            help="Path where the results Excel file should be saved.",
+            help="Path to the **folder** where the results Excel file should be saved.",
             dir_okay=True,
             exists=True,
         ),
@@ -105,7 +105,7 @@ def save(
 def save_by_row(
         path: Path = typer.Argument(
             ...,
-            help="Path where the results Excel file should be saved.",
+            help="Path to the **folder** where the results Excel file should be saved",
             dir_okay=True,
             exists=True,
         ),
