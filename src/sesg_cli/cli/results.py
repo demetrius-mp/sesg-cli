@@ -26,6 +26,39 @@ class InvalidAlgorithm(Exception):
     """The algorithm passed as a parameter is not valid"""
 
 
+def verify_metrics_and_algorithms(metrics: list[str] | None, algorithms: list[str] | None) -> NoReturn:
+    if not set(metrics or []).issubset(set(_AVAILABLE_METRICS)):
+        raise InvalidMetric()
+
+    if not set(algorithms or []).issubset(set(_IMPLEMENTED_ALGORITHMS)):
+        raise InvalidAlgorithm()
+
+
+def save_xlsx(excel_writer: pd.ExcelWriter, results: dict[str, dict]):
+    with Progress() as progress:
+        saving_progress = progress.add_task(
+            "[green]Saving...", total=len(results)
+        )
+        with excel_writer:
+            for i, (key, result) in enumerate(results.items()):
+                df = pd.DataFrame(data=result['data'], columns=result['columns'])
+                df.to_excel(excel_writer=excel_writer, sheet_name=key, index=False)
+
+                for column in df:
+                    max_col_width = max(df[column].astype(str).map(len).max(), len(column))
+                    col_idx = df.columns.get_loc(column)
+                    excel_writer.sheets[key].set_column(col_idx, col_idx, max_col_width)
+
+                progress.update(
+                    saving_progress,
+                    description=f"[green]Saving {i + 1} of {len(results)}",
+                    advance=1,
+                    refresh=True,
+                )
+
+        progress.remove_task(saving_progress)
+
+
 @app.command(help='Creates a Excel file based on the given Path and SLR.')
 def save(
         path: Path = typer.Argument(
