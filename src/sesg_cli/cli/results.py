@@ -145,38 +145,3 @@ def save_by_row(
     excel_writer = pd.ExcelWriter(path / f"{slr}_by_row_num.xlsx", engine='xlsxwriter')
 
     save_xlsx(excel_writer, results)
-
-
-def save_xlsx(excel_writer: pd.ExcelWriter, results: dict[str, dict]):
-    with Progress() as progress:
-        saving_progress = progress.add_task(
-            "[green]Saving...", total=len(results)
-        )
-        with excel_writer:
-            for i, (key, result) in enumerate(results.items()):
-                df = pd.DataFrame(data=result['data'], columns=result['columns'])
-                df.to_excel(excel_writer=excel_writer, sheet_name=key, index=False)
-
-                for column in df:
-                    max_col_width = max(df[column].astype(str).map(len).max(), len(column))
-                    col_idx = df.columns.get_loc(column)
-                    excel_writer.sheets[key].set_column(col_idx, col_idx, max_col_width)
-
-                progress.update(
-                    saving_progress,
-                    description=f"[green]Saving {i + 1} of {len(results)}",
-                    advance=1,
-                    refresh=True,
-                )
-
-
-def verify_metrics_and_algorithms(metrics: list[str] | None, algorithms: list[str] | None) -> NoReturn:
-    if metrics:
-        for metric in metrics:
-            if metric not in _AVAILABLE_METRICS:
-                raise InvalidMetric()
-
-    if algorithms:
-        for algorithm in algorithms:
-            if algorithm not in _IMPLEMENTED_ALGORITHMS:
-                raise InvalidAlgorithm()
