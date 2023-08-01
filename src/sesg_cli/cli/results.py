@@ -42,6 +42,13 @@ def save_xlsx(excel_writer: pd.ExcelWriter, results: dict[str, dict]):
         with excel_writer:
             for i, (key, result) in enumerate(results.items()):
                 df = pd.DataFrame(data=result['data'], columns=result['columns'])
+
+                if 'name' in df.columns:
+                    cols = df.columns.tolist()
+                    cols.remove('name')
+                    cols.insert(0, 'name')
+                    df = df[cols]
+
                 df.to_excel(excel_writer=excel_writer, sheet_name=key, index=False)
 
                 for column in df:
