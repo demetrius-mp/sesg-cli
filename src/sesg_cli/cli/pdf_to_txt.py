@@ -5,14 +5,14 @@ import typer
 from rich.progress import Progress
 
 
-app = typer.Typer(rich_markup_mode="markdown", help="Convert pdfs to txt")
+app = typer.Typer(rich_markup_mode="markdown", help="Convert pdfs to txt.")
 
 
 @app.command()
 def convert(
     pdfs_folder_path: Path = typer.Argument(
         ...,
-        help="Path to the pdfs folder that will be converted",
+        help="Path to the pdfs folder that will be converted.",
         dir_okay=True,
         exists=True,
     )

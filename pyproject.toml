@@ -15,7 +15,8 @@ dependencies = [
   "torch==2.0.0",
   "transformers==4.30.2",
   "rich==13.3.5",
-  "pypdf2==3.0.1"
+  "pypdf2==3.0.1",
+  "xlsxwriter==3.1.2"
 ]
 
 [project.scripts]
