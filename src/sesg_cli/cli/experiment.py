@@ -1,3 +1,5 @@
+from time import time
+
 from pathlib import Path
 from random import sample
 from typing import Any
@@ -15,10 +17,10 @@ from sesg_cli.database.models import (
     SearchString,
 )
 from sesg_cli.topic_extraction_strategies import TopicExtractionStrategy
+from sesg_cli.telegram_report import TelegramReport
 
 
 app = typer.Typer(rich_markup_mode="markdown", help="Start an experiment for a SLR.")
-
 
 @app.command()
 def start(
@@ -51,6 +53,7 @@ def start(
     Will only generate strings using unseen parameters from the config file. If a string was already
     generated for this experiment using a set of parameters for the strategy, will skip it.
     """  # noqa: E501
+    start_time = time()
     from sesg.search_string import generate_search_string, set_pub_year_boundaries
     from sesg.similar_words.bert_strategy import BertSimilarWordsGenerator
     from sesg.topic_extraction import (
@@ -64,6 +67,8 @@ def start(
     logging.set_verbosity_error()
 
     config = Config.from_toml(config_toml_path)
+
+    telegram_report = TelegramReport(slr_name=slr_name, experiment_name=experiment_name)
 
     with Session() as session:
         slr = SLR.get_by_name(slr_name, session)
@@ -115,8 +120,12 @@ def start(
             session=session,
         )
 
+        telegram_report.send_new_execution_report()
+
         with Progress() as progress:
             for strategy in strategies_list:
+                telegram_report.send_new_strategy_start_report(strategy=strategy.name)
+
                 config_params_list = Params.create_with_strategy(
                     config=config,
                     experiment_id=experiment.id,
@@ -145,6 +154,11 @@ def start(
                         lda_params_id=params.lda_params_id,
                         session=session,
                     )
+
+                    if i+1 in (n_params*0.25, n_params*0.50, n_params*0.75):
+                        telegram_report.send_progress_report(strategy=strategy.name,
+                                                             percentage=int((i+1/n_params)*100),
+                                                             exec_time=time()-start_time)
 
                     if existing_params is not None:
                         progress.update(
@@ -175,9 +189,9 @@ def start(
                         )
 
                     else:
-                        raise RuntimeError(
-                            "Invalid Topic Extraction Strategy or the params instance does not have neither a lda_params or bertopic_params"  # noqa: E501
-                        )
+                        error_message = "Invalid Topic Extraction Strategy or the params instance does not have neither a lda_params or bertopic_params"  # noqa: E501
+                        telegram_report.send_error_report(error_message=error_message)
+                        raise RuntimeError(error_message)
 
                     formulation_params = params.formulation_params
 
@@ -206,3 +220,5 @@ def start(
                     session.commit()
 
                 progress.remove_task(task_id)
+
+                telegram_report.send_finish_report(exec_time=time()-start_time)
