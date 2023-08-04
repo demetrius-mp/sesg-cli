@@ -221,4 +221,4 @@ def start(
 
                 progress.remove_task(task_id)
 
-                telegram_report.send_finish_report(exec_time=time()-start_time)
+    telegram_report.send_finish_report(exec_time=time()-start_time)
