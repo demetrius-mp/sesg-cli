@@ -157,7 +157,7 @@ def start(
 
                     if i+1 in (n_params*0.25, n_params*0.50, n_params*0.75):
                         telegram_report.send_progress_report(strategy=strategy.name,
-                                                             percentage=int((i+1/n_params)*100),
+                                                             percentage=int(((i+1)/n_params)*100),
                                                              exec_time=time()-start_time)
 
                     if existing_params is not None:
