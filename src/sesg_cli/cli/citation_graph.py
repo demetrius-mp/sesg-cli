@@ -14,6 +14,22 @@ app = typer.Typer(
 
 
 @app.command()
+def statistics(
+    slr_name: str = typer.Argument(
+        ...,
+        help="Name of the Systematic Literature Review",
+    ),
+):
+    with Session() as session:
+        slr = SLR.get_by_name(slr_name, session)
+
+        number_of_components, mean_degree = slr.get_graph_statistics()
+
+    print(f"Number of components: {number_of_components}")
+    print(f"Mean degree: {mean_degree}")
+
+
+@app.command()
 def render_slr(
     out_path: Path = typer.Argument(
         ...,
