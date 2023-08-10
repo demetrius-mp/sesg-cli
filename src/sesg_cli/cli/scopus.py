@@ -110,34 +110,59 @@ async def search(
 
                         results.extend(page.entries)
 
+                    evaluation = evaluation_factory.evaluate([r.title for r in results])
+                    performance = SearchStringPerformance.from_studies_lists(
+                        n_scopus_results=len(results),
+                        qgs_in_scopus=[
+                            slr.get_study_by_id(s.id) for s in evaluation.qgs_in_scopus
+                        ],
+                        gs_in_scopus=[
+                            slr.get_study_by_id(s.id) for s in evaluation.gs_in_scopus
+                        ],
+                        gs_in_bsb=[
+                            slr.get_study_by_id(s.id) for s in evaluation.gs_in_bsb
+                        ],
+                        gs_in_sb=[
+                            slr.get_study_by_id(s.id) for s in evaluation.gs_in_sb
+                        ],
+                        start_set_precision=evaluation.start_set_precision,
+                        start_set_recall=evaluation.start_set_recall,
+                        start_set_f1_score=evaluation.start_set_f1_score,
+                        bsb_recall=evaluation.bsb_recall,
+                        sb_recall=evaluation.sb_recall,
+                        search_string_id=search_string.id,
+                    )
+
+                    session.add(performance)
+                    session.commit()
+
                 except InvalidStringError:
                     print("The following string raised an InvalidStringError")
                     print(search_string.string)
 
-                progress.remove_task(progress_task)
+                    performance = SearchStringPerformance(
+                        n_scopus_results=-1,
+                        qgs_in_scopus=[],
+                        gs_in_bsb=[],
+                        gs_in_sb=[],
+                        n_gs_in_scopus=0,
+                        n_qgs_in_scopus=0,
+                        gs_in_scopus=[],
+                        n_gs_in_bsb=0,
+                        n_gs_in_sb=0,
+                        start_set_precision=0,
+                        start_set_recall=0,
+                        start_set_f1_score=0,
+                        bsb_recall=0,
+                        sb_recall=0,
+                        search_string_id=search_string.id,
+                    )
 
-                evaluation = evaluation_factory.evaluate([r.title for r in results])
-                performance = SearchStringPerformance.from_studies_lists(
-                    n_scopus_results=len(results),
-                    qgs_in_scopus=[
-                        slr.get_study_by_id(s.id) for s in evaluation.qgs_in_scopus
-                    ],
-                    gs_in_scopus=[
-                        slr.get_study_by_id(s.id) for s in evaluation.gs_in_scopus
-                    ],
-                    gs_in_bsb=[slr.get_study_by_id(s.id) for s in evaluation.gs_in_bsb],
-                    gs_in_sb=[slr.get_study_by_id(s.id) for s in evaluation.gs_in_sb],
-                    start_set_precision=evaluation.start_set_precision,
-                    start_set_recall=evaluation.start_set_recall,
-                    start_set_f1_score=evaluation.start_set_f1_score,
-                    bsb_recall=evaluation.bsb_recall,
-                    sb_recall=evaluation.sb_recall,
-                    search_string_id=search_string.id,
-                )
+                    session.add(performance)
+                    session.commit()
 
-                session.add(performance)
-                session.commit()
-
-                progress.advance(overall_task)
+                finally:
+                    progress.remove_task(progress_task)
+                    progress.advance(overall_task)
 
             progress.remove_task(overall_task)
