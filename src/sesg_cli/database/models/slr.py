@@ -104,3 +104,15 @@ class SLR(Base):
         )
 
         return slr
+
+    def get_graph_statistics(self) -> tuple[int, float]:
+        adjacency_list = self.adjacency_list()
+
+        from networkx import Graph, number_connected_components
+
+        g = Graph(adjacency_list)
+        number_of_components: int = number_connected_components(g)
+        degrees = [degree for _, degree in g.degree]  # type: ignore
+        mean_degree = sum(degrees) / len(degrees)
+
+        return number_of_components, mean_degree
