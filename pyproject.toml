@@ -18,6 +18,7 @@ dependencies = [
   "pypdf2==3.0.1",
   "xlsxwriter==3.1.2",
   "pyTelegramBotAPI==4.12.0",
+  "networkx==3.1",
 ]
 
 [project.scripts]
@@ -28,10 +29,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [tool.ruff]
-extend-select = [
-  "I001",
-  "C"
-]
+extend-select = ["I001", "C"]
 unfixable = ["F841"]
 exclude = [".venv"]
 ignore-init-module-imports = true
