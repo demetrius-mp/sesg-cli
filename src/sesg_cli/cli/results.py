@@ -63,7 +63,27 @@ def save_xlsx(excel_writer: pd.ExcelWriter, results: dict[str, dict]):
                     refresh=True,
                 )
 
+            statistics_calc({key: value for key, value in results.items() if key in _IMPLEMENTED_ALGORITHMS})
+
         progress.remove_task(saving_progress)
+
+
+def statistics_calc(results: dict[dict]):
+    root_cols = ['start_set_precision', 'start_set_recall', 'start_set_f1_score',
+                 'bsb_recall', 'sb_recall', 'n_scopus_result']
+
+    stats_df = pd.DataFrame()
+    for key, result in results.items():
+        temp_df = pd.DataFrame(data=result['data'], columns=result['columns'])
+
+        for col in root_cols:
+            stats_df[f'mean_{col}'] = temp_df[col].mean()
+            stats_df[f'stdev_{col}'] = temp_df[col].std()
+
+
+
+
+    return results
 
 
 @app.command(help='Creates a Excel file based on the given Path and SLR.')
@@ -92,6 +112,10 @@ def save(
             hidden=True
         )
 ):
+    path = Path("D:\\Documentos\\1-Faculdade\\mestrado\\sesg_stuff\\sesg-cli\\sesg-slrs\\alli")
+    slr = 'alli'
+    metrics = []
+    algorithms = []
     verify_metrics_and_algorithms(metrics, algorithms)
 
     print("Retrieving information from database...")
@@ -152,3 +176,7 @@ def save_by_row(
     excel_writer = pd.ExcelWriter(path / f"{slr}_top_per_exp.xlsx", engine='xlsxwriter')
 
     save_xlsx(excel_writer, results)
+
+
+if __name__ == '__main__':
+    save()
