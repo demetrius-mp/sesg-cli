@@ -34,6 +34,13 @@ def verify_metrics_and_algorithms(metrics: list[str] | None, algorithms: list[st
         raise InvalidAlgorithm()
 
 
+def adjust_max_col_width(df: pd.DataFrame, writer: pd.ExcelWriter, sheet_name: str):
+    for column in df:
+        max_col_width = max(df[column].astype(str).map(len).max(), len(column))
+        col_idx = df.columns.get_loc(column)
+        writer.sheets[sheet_name].set_column(col_idx, col_idx, max_col_width)
+
+
 def save_xlsx(excel_writer: pd.ExcelWriter, results: dict[str, dict]):
     with Progress() as progress:
         saving_progress = progress.add_task(
@@ -50,11 +57,7 @@ def save_xlsx(excel_writer: pd.ExcelWriter, results: dict[str, dict]):
                     df = df[cols]
 
                 df.to_excel(excel_writer=excel_writer, sheet_name=key, index=False)
-
-                for column in df:
-                    max_col_width = max(df[column].astype(str).map(len).max(), len(column))
-                    col_idx = df.columns.get_loc(column)
-                    excel_writer.sheets[key].set_column(col_idx, col_idx, max_col_width)
+                adjust_max_col_width(df, excel_writer, key)
 
                 progress.update(
                     saving_progress,
@@ -63,27 +66,43 @@ def save_xlsx(excel_writer: pd.ExcelWriter, results: dict[str, dict]):
                     refresh=True,
                 )
 
-            statistics_calc({key: value for key, value in results.items() if key in _IMPLEMENTED_ALGORITHMS})
+            overall_results = {key: value for key, value in results.items() if key in _IMPLEMENTED_ALGORITHMS}
+            statistics_calc(overall_results, excel_writer)
 
         progress.remove_task(saving_progress)
 
 
-def statistics_calc(results: dict[dict]):
+def statistics_calc(results: dict[dict], excel_writer: pd.ExcelWriter) -> NoReturn:
     root_cols = ['start_set_precision', 'start_set_recall', 'start_set_f1_score',
-                 'bsb_recall', 'sb_recall', 'n_scopus_result']
+                 'bsb_recall', 'sb_recall', 'n_scopus_results']
+    max_cols_highlight = ['mean_start_set_precision', 'mean_start_set_recall', 'mean_start_set_f1_score',
+                          'mean_bsb_recall', 'mean_sb_recall']
 
-    stats_df = pd.DataFrame()
+    idx = list()
+    for col in root_cols:
+        idx.append(f'mean_{col}')
+        idx.append(f'stdev_{col}')
+
+    stats_df = pd.DataFrame(columns=_IMPLEMENTED_ALGORITHMS, index=idx)
+
     for key, result in results.items():
         temp_df = pd.DataFrame(data=result['data'], columns=result['columns'])
 
         for col in root_cols:
-            stats_df[f'mean_{col}'] = temp_df[col].mean()
-            stats_df[f'stdev_{col}'] = temp_df[col].std()
+            stats_df.loc[f'mean_{col}', key] = round(temp_df[col].mean(), 5)
+            stats_df.loc[f'stdev_{col}', key] = round(temp_df[col].std(), 5)
 
+    stats_df = stats_df.T
 
+    style_stats = stats_df.style \
+        .highlight_max(subset=max_cols_highlight, color='#8aeda4') \
+        .highlight_min(subset=['mean_n_scopus_results'], color='#8aeda4')
 
+    stats_df = stats_df.reset_index()
+    stats_df.rename(columns={'index': 'algorithm'}, inplace=True)
 
-    return results
+    style_stats.to_excel(excel_writer=excel_writer, sheet_name='stats')
+    adjust_max_col_width(stats_df, excel_writer, 'stats')
 
 
 @app.command(help='Creates a Excel file based on the given Path and SLR.')
@@ -112,10 +131,6 @@ def save(
             hidden=True
         )
 ):
-    path = Path("D:\\Documentos\\1-Faculdade\\mestrado\\sesg_stuff\\sesg-cli\\sesg-slrs\\alli")
-    slr = 'alli'
-    metrics = []
-    algorithms = []
     verify_metrics_and_algorithms(metrics, algorithms)
 
     print("Retrieving information from database...")
@@ -176,7 +191,3 @@ def save_by_row(
     excel_writer = pd.ExcelWriter(path / f"{slr}_top_per_exp.xlsx", engine='xlsxwriter')
 
     save_xlsx(excel_writer, results)
-
-
-if __name__ == '__main__':
-    save()
