@@ -8,6 +8,7 @@ from typing import NoReturn
 from sesg_cli.database.models import SearchStringPerformance
 from sesg_cli.database import Session
 from sesg_cli.database.util.results_queries import ResultQuery
+from sesg_cli.database.models import SLR
 
 _AVAILABLE_METRICS = ["start_set_f1_score", "bsb_recall", "sb_recall"]
 _DEFAULT_METRICS = ["start_set_precision", "start_set_recall"]
@@ -41,7 +42,24 @@ def adjust_max_col_width(df: pd.DataFrame, writer: pd.ExcelWriter, sheet_name: s
         writer.sheets[sheet_name].set_column(col_idx, col_idx, max_col_width)
 
 
-def save_xlsx(excel_writer: pd.ExcelWriter, results: dict[str, dict]):
+def graph_tab(slr_name: str, excel_writer: pd.ExcelWriter):
+    sheet_name = 'graph_info'
+
+    with Session() as session:
+        slr = SLR.get_by_name(slr_name, session)
+        number_of_components, mean_degree = slr.get_graph_statistics()
+
+    data = {'number_of_components': number_of_components,
+            'mean_degree': round(mean_degree, 3)}
+
+    df = pd.DataFrame().from_dict(data, orient='index')
+
+    df.rename(columns={0: 'values'}, inplace=True)
+    df.to_excel(excel_writer=excel_writer, sheet_name=sheet_name)
+    excel_writer.sheets[sheet_name].set_column(0, 1, 25)
+
+
+def save_xlsx(excel_writer: pd.ExcelWriter, results: dict[str, dict], slr: str):
     with Progress() as progress:
         saving_progress = progress.add_task(
             "[green]Saving...", total=len(results)
@@ -67,12 +85,13 @@ def save_xlsx(excel_writer: pd.ExcelWriter, results: dict[str, dict]):
                 )
 
             overall_results = {key: value for key, value in results.items() if key in _IMPLEMENTED_ALGORITHMS}
-            statistics_calc(overall_results, excel_writer)
+            statistics_tab(overall_results, excel_writer)
+            graph_tab(slr, excel_writer)
 
         progress.remove_task(saving_progress)
 
 
-def statistics_calc(results: dict[dict], excel_writer: pd.ExcelWriter) -> NoReturn:
+def statistics_tab(results: dict[dict], excel_writer: pd.ExcelWriter) -> NoReturn:
     root_cols = ['start_set_precision', 'start_set_recall', 'start_set_f1_score',
                  'bsb_recall', 'sb_recall', 'n_scopus_results']
     max_cols_highlight = ['mean_start_set_precision', 'mean_start_set_recall', 'mean_start_set_f1_score',
@@ -143,7 +162,7 @@ def save(
 
     excel_writer = pd.ExcelWriter(path / f"{slr}.xlsx", engine='xlsxwriter')
 
-    save_xlsx(excel_writer, results)
+    save_xlsx(excel_writer, results, slr)
 
 
 @app.command(help='Creates a Excel file with the best `top` '
@@ -190,4 +209,4 @@ def save_by_row(
 
     excel_writer = pd.ExcelWriter(path / f"{slr}_top_per_exp.xlsx", engine='xlsxwriter')
 
-    save_xlsx(excel_writer, results)
+    save_xlsx(excel_writer, results, slr)
