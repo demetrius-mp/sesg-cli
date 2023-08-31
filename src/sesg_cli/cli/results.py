@@ -106,6 +106,7 @@ def statistics_tab(results: dict[dict], excel_writer: pd.ExcelWriter) -> NoRetur
 
     for key, result in results.items():
         temp_df = pd.DataFrame(data=result['data'], columns=result['columns'])
+        temp_df = temp_df.drop(temp_df[temp_df["n_scopus_results"] == 0].index)
 
         for col in root_cols:
             stats_df.loc[f'mean_{col}', key] = round(temp_df[col].mean(), 5)
