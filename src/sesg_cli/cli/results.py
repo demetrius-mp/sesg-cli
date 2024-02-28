@@ -91,7 +91,7 @@ def save_xlsx(excel_writer: pd.ExcelWriter, results: dict[str, dict], slr: str):
         progress.remove_task(saving_progress)
 
 
-def statistics_tab(results: dict[dict], excel_writer: pd.ExcelWriter) -> NoReturn:
+def statistics_tab(results: dict[str, dict], excel_writer: pd.ExcelWriter) -> NoReturn:
     root_cols = ['start_set_precision', 'start_set_recall', 'start_set_f1_score',
                  'bsb_recall', 'sb_recall', 'n_scopus_results']
     max_cols_highlight = ['mean_start_set_precision', 'mean_start_set_recall', 'mean_start_set_f1_score',
@@ -106,7 +106,7 @@ def statistics_tab(results: dict[dict], excel_writer: pd.ExcelWriter) -> NoRetur
 
     for key, result in results.items():
         temp_df = pd.DataFrame(data=result['data'], columns=result['columns'])
-        temp_df = temp_df.drop(temp_df[temp_df["n_scopus_results"] == 0].index)
+        temp_df = temp_df.drop(temp_df[temp_df["n_scopus_results"] <= 0].index)
 
         for col in root_cols:
             stats_df.loc[f'mean_{col}', key] = round(temp_df[col].mean(), 5)
