@@ -91,7 +91,7 @@ def save_xlsx(excel_writer: pd.ExcelWriter, results: dict[str, dict], slr: str):
         progress.remove_task(saving_progress)
 
 
-def statistics_tab(results: dict[dict], excel_writer: pd.ExcelWriter) -> NoReturn:
+def statistics_tab(results: dict[str, dict], excel_writer: pd.ExcelWriter) -> NoReturn:
     root_cols = ['start_set_precision', 'start_set_recall', 'start_set_f1_score',
                  'bsb_recall', 'sb_recall', 'n_scopus_results']
     max_cols_highlight = ['mean_start_set_precision', 'mean_start_set_recall', 'mean_start_set_f1_score',
