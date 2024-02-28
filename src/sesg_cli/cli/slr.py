@@ -29,6 +29,8 @@ def create_from_json(
     ),
     txts_extension: str = typer.Option(
         "txt",
+        "--extension",
+        "-e",
         help="Extension of the text files (cermtxt, txt).",
     ),
 ):
