@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 
 from sesg.similar_words.bert_strategy import BertSimilarWordsGenerator
-from sesg_cli.strategies_implementations.llm_similar_words_generator import LlmSimilarWordsGenerator
 from sesg.similar_words.protocol import SimilarWordsGenerator
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from sesg_cli.database.models import SimilarWord, SimilarWordsCache
-
-# DONE: Add possibilty to use a LlmSimilarWordsGenerator //NOSONAR
+from sesg_cli.strategies_implementations.llm_similar_words_generator import (
+    LlmSimilarWordsGenerator,
+)
 
 
 @dataclass
