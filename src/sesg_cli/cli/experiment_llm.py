@@ -1,3 +1,4 @@
+from itertools import product
 from pathlib import Path
 from random import sample
 from typing import Any
@@ -14,13 +15,18 @@ from sesg_cli.database.models import (
     Params,
     SearchString,
 )
-from sesg_cli.topic_extraction_strategies import TopicExtractionStrategy
+from sesg_cli.strategies import (
+    SimilarWordGeneratorStrategy,
+    TopicExtractionStrategy,
+)
 
-app = typer.Typer(rich_markup_mode="markdown", help="Start an experiment for a SLR.")
+
+app = typer.Typer(rich_markup_mode="markdown",
+                  help="Start an experiment for a SLR. With multiple similar words generation strategies.")
 
 
 @app.command()
-def start(
+def start(  # noqa: C901 - method too complex
         slr_name: str = typer.Argument(
             ...,
             help="Name of the Systematic Literature Review",
@@ -38,18 +44,18 @@ def start(
             file_okay=True,
             exists=True,
         ),
-        strategies_list: list[TopicExtractionStrategy] = typer.Option(
+        topic_extraction_strategies_list: list[TopicExtractionStrategy] = typer.Option(
             [TopicExtractionStrategy.bertopic, TopicExtractionStrategy.lda],
-            "--strategy",
-            "-s",
+            "--topic-strategy",
+            "-ste",
             help="Which topic extraction strategies to use.",
         ),
-        similar_word_generator: str = typer.Option(
-            "bert",
-            "--generator",
-            "-g",
-            help="Which word generator to use. (bert, llm)"
-        )
+        similar_word_strategies_list: list[SimilarWordGeneratorStrategy] = typer.Option(
+            [SimilarWordGeneratorStrategy.bert, SimilarWordGeneratorStrategy.llm],
+            "--similar-word-strategy",
+            "-sws",
+            help="Which similar word generation strategies to use.",
+        ),
 ):
     """Starts an experiment and generates search strings.
 
@@ -59,15 +65,16 @@ def start(
 
     from sesg.search_string import generate_search_string, set_pub_year_boundaries
     from sesg.similar_words.bert_strategy import BertSimilarWordsGenerator
-    from transformers import BertForMaskedLM, BertTokenizer, logging  # type: ignore
-    from sesg_cli.strategies_implementations.llm_similar_words_generator import LlmSimilarWordsGenerator
-
     from sesg.topic_extraction import (
         extract_topics_with_bertopic,
         extract_topics_with_lda,
     )
+    from transformers import BertForMaskedLM, BertTokenizer, logging  # type: ignore
 
     from sesg_cli.similar_words_generator_cache import SimilarWordsGeneratorCache
+    from sesg_cli.strategies_implementations.llm_similar_words_generator import (
+        LlmSimilarWordsGenerator,
+    )
 
     logging.set_verbosity_error()
 
@@ -110,45 +117,61 @@ def start(
         print("Loading tokenizer and language model...")
         print()
 
-        if similar_word_generator == "bert":
-            bert_tokenizer: Any = BertTokenizer.from_pretrained("bert-base-uncased")
-            bert_model: Any = BertForMaskedLM.from_pretrained("bert-base-uncased")
-            bert_model.eval()
-            similar_word_generator = BertSimilarWordsGenerator(
-                enrichment_text=enrichment_text,
-                bert_model=bert_model,
-                bert_tokenizer=bert_tokenizer,
-            )
-        else:
-            similar_word_generator = LlmSimilarWordsGenerator(enrichment_text=enrichment_text)
-
-        similar_words_generator = SimilarWordsGeneratorCache(
-            similar_word_generator=similar_word_generator,
-            experiment_id=experiment.id,
-            session=session,
-        )
-
         with Progress() as progress:
-            for strategy in strategies_list:
+            for strategies_set in product(similar_word_strategies_list, topic_extraction_strategies_list):
+                similar_word_strategy = strategies_set[0]
+                topic_extraction_strategy = strategies_set[1]
+
                 config_params_list = Params.create_with_strategy(
                     config=config,
                     experiment_id=experiment.id,
                     session=session,
-                    strategy=strategy,
+                    similar_word_strategy=similar_word_strategy,
+                    topic_extraction_strategy=topic_extraction_strategy,
                 )
 
                 n_params = len(config_params_list)
                 task_id = progress.add_task(
-                    f"Found [bright_cyan]{n_params}[/bright_cyan] parameters variations for {strategy}...",
+                    f"Found [bright_cyan]{n_params}[/bright_cyan] parameters variations for {topic_extraction_strategy} with {similar_word_strategy}...",
                     # noqa: E501
                     total=n_params,
+                )
+
+                if similar_word_strategy == SimilarWordGeneratorStrategy.bert:
+                    bert_tokenizer: Any = BertTokenizer.from_pretrained(
+                        "bert-base-uncased")
+                    bert_model: Any = BertForMaskedLM.from_pretrained(
+                        "bert-base-uncased")
+
+                    bert_model.eval()
+
+                    similar_word_generator = BertSimilarWordsGenerator(
+                        enrichment_text=enrichment_text,
+                        bert_model=bert_model,
+                        bert_tokenizer=bert_tokenizer,
+                    )
+
+                elif similar_word_strategy == SimilarWordGeneratorStrategy.llm:
+                    similar_word_generator = LlmSimilarWordsGenerator(
+                        enrichment_text=enrichment_text)
+
+                else:
+                    raise RuntimeError(
+                        "Invalid Similar Word Generation Strategy. Must be either ['bert','llm']."
+                        # noqa: E501
+                    )
+
+                similar_words_generator = SimilarWordsGeneratorCache(
+                    similar_word_generator=similar_word_generator,
+                    experiment_id=experiment.id,
+                    session=session,
                 )
 
                 for i, params in enumerate(config_params_list):
                     progress.update(
                         task_id,
                         advance=1,
-                        description=f"{strategy}: Using parameter variation [bright_cyan]{i + 1}[/] of [bright_cyan]{n_params}[/]",
+                        description=f"{topic_extraction_strategy} - {similar_word_strategy}: Using parameter variation [bright_cyan]{i + 1}[/] of [bright_cyan]{n_params}[/]",
                         # noqa: E501
                         refresh=True,
                     )
@@ -164,14 +187,14 @@ def start(
                     if existing_params is not None:
                         progress.update(
                             task_id,
-                            description=f"{strategy}: Skipped parameter variation [bright_cyan]{i + 1}[/] of [bright_cyan]{n_params}[/]",
+                            description=f"{topic_extraction_strategy} - {similar_word_strategy}: Skipped parameter variation [bright_cyan]{i + 1}[/] of [bright_cyan]{n_params}[/]",
                             # noqa: E501
                             refresh=True,
                         )
                         continue
 
                     if (
-                            strategy == TopicExtractionStrategy.bertopic
+                            topic_extraction_strategy == TopicExtractionStrategy.bertopic
                             and params.bertopic_params is not None
                     ):
                         topics_list = extract_topics_with_bertopic(
@@ -181,7 +204,7 @@ def start(
                         )
 
                     elif (
-                            strategy == TopicExtractionStrategy.lda
+                            topic_extraction_strategy == TopicExtractionStrategy.lda
                             and params.lda_params is not None
                     ):
                         topics_list = extract_topics_with_lda(
