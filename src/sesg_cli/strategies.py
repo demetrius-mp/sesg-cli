@@ -12,3 +12,15 @@ class TopicExtractionStrategy(str, Enum):
 
     lda = "lda"
     bertopic = "bertopic"
+
+
+class SimilarWordGeneratorStrategy(str, Enum):
+    """Enum defining the available similar word generation strategies.
+
+    Examples:
+        >>> bert_strategy = SimilarWordGeneratorStrategy.bert
+        >>> bert_strategy.value
+        'bert'
+    """
+    bert = "bert"
+    llm = "llm"
