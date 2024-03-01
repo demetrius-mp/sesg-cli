@@ -14,10 +14,14 @@ from sesg_cli.database.models import (
     Params,
     SearchString,
 )
-from sesg_cli.topic_extraction_strategies import TopicExtractionStrategy
+from sesg_cli.strategies import (
+    SimilarWordGeneratorStrategy,
+    TopicExtractionStrategy,
+)
 
 
-app = typer.Typer(rich_markup_mode="markdown", help="Start an experiment for a SLR.")
+app = typer.Typer(rich_markup_mode="markdown",
+                  help="Start an experiment for a SLR.")
 
 
 @app.command()
@@ -101,12 +105,13 @@ def start(
 
         print("Loading tokenizer and language model...")
         print()
-        bert_tokenizer: Any = BertTokenizer.from_pretrained("bert-base-uncased")
+        bert_tokenizer: Any = BertTokenizer.from_pretrained(
+            "bert-base-uncased")
         bert_model: Any = BertForMaskedLM.from_pretrained("bert-base-uncased")
         bert_model.eval()
 
         similar_words_generator = SimilarWordsGeneratorCache(
-            bert_generator=BertSimilarWordsGenerator(
+            similar_word_generator=BertSimilarWordsGenerator(
                 enrichment_text=enrichment_text,
                 bert_model=bert_model,
                 bert_tokenizer=bert_tokenizer,
@@ -121,7 +126,8 @@ def start(
                     config=config,
                     experiment_id=experiment.id,
                     session=session,
-                    strategy=strategy,
+                    topic_extraction_strategy=strategy,
+                    similar_word_strategy=SimilarWordGeneratorStrategy.bert,
                 )
 
                 n_params = len(config_params_list)
