@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Optional
 from sqlalchemy import (
     CheckConstraint,
     ForeignKey,
+    String,
     UniqueConstraint,
     select,
 )
@@ -15,7 +16,10 @@ from sqlalchemy.orm import (
 )
 
 from sesg_cli.config import Config
-from sesg_cli.topic_extraction_strategies import TopicExtractionStrategy
+from sesg_cli.strategies import (
+    SimilarWordGeneratorStrategy,
+    TopicExtractionStrategy,
+)
 
 from .base import Base
 from .bertopic_params import BERTopicParams
@@ -32,6 +36,8 @@ class Params(Base):
     __tablename__ = "params"
 
     id: Mapped[int] = mapped_column(primary_key=True, init=False)
+
+    similar_word_strategy: Mapped[str] = mapped_column(String(25))
 
     experiment_id: Mapped[int] = mapped_column(
         ForeignKey("experiment.id"),
@@ -81,8 +87,10 @@ class Params(Base):
     )
 
     __table_args__ = (
-        CheckConstraint("lda_params_id is not null or bertopic_params_id is not null"),
-        UniqueConstraint("experiment_id", "formulation_params_id", "lda_params_id"),
+        CheckConstraint(
+            "lda_params_id is not null or bertopic_params_id is not null"),
+        UniqueConstraint(
+            "experiment_id", "formulation_params_id", "lda_params_id"),
         UniqueConstraint(
             "experiment_id", "formulation_params_id", "bertopic_params_id"
         ),
@@ -116,6 +124,7 @@ class Params(Base):
         formulation_params_list: list[FormulationParams],
         lda_params_list: list[LDAParams],
         experiment_id: int,
+        similar_word_strategy: str,
     ):
         return [
             Params(
@@ -124,6 +133,7 @@ class Params(Base):
                 lda_params_id=lda_params.id,
                 formulation_params=formulation_params,
                 formulation_params_id=formulation_params.id,
+                similar_word_strategy=similar_word_strategy,
             )
             for lda_params, formulation_params in product(
                 lda_params_list,
@@ -137,6 +147,7 @@ class Params(Base):
         formulation_params_list: list[FormulationParams],
         bertopic_params_list: list[BERTopicParams],
         experiment_id: int,
+        similar_word_strategy: str,
     ):
         return [
             Params(
@@ -145,6 +156,7 @@ class Params(Base):
                 bertopic_params_id=bertopic_params.id,
                 formulation_params=formulation_params,
                 formulation_params_id=formulation_params.id,
+                similar_word_strategy=similar_word_strategy,
             )
             for bertopic_params, formulation_params in product(
                 bertopic_params_list,
@@ -155,7 +167,8 @@ class Params(Base):
     @classmethod
     def create_with_strategy(
         cls,
-        strategy: "TopicExtractionStrategy",
+        topic_extraction_strategy: "TopicExtractionStrategy",
+        similar_word_strategy: "SimilarWordGeneratorStrategy",
         config: Config,
         experiment_id: int,
         session: Session,
@@ -166,7 +179,7 @@ class Params(Base):
             session=session,
         )
 
-        if strategy == TopicExtractionStrategy.bertopic:
+        if topic_extraction_strategy == TopicExtractionStrategy.bertopic:
             model_params_list = (
                 BERTopicParams.get_or_save_from_params_product(  # noqa: E501
                     kmeans_n_clusters_list=config.bertopic_params.kmeans_n_clusters,
@@ -179,9 +192,10 @@ class Params(Base):
                 formulation_params_list=formulation_params_list,
                 bertopic_params_list=model_params_list,
                 experiment_id=experiment_id,
+                similar_word_strategy=similar_word_strategy.value,
             )
 
-        elif strategy == TopicExtractionStrategy.lda:
+        elif topic_extraction_strategy == TopicExtractionStrategy.lda:
             model_params_list = LDAParams.get_or_save_from_params_product(
                 n_topics_list=config.lda_params.n_topics,
                 min_document_frequency_list=config.lda_params.min_document_frequency,
@@ -192,4 +206,5 @@ class Params(Base):
                 formulation_params_list=formulation_params_list,
                 lda_params_list=model_params_list,
                 experiment_id=experiment_id,
+                similar_word_strategy=similar_word_strategy.value,
             )
