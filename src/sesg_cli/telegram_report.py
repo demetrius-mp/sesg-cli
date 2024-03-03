@@ -15,6 +15,7 @@ class TelegramReport:
 
         self.slr_name: str = slr_name
         self.experiment_name: str = experiment_name
+        self.strategies: list[tuple[str, str]] = strategies
 
     @staticmethod
     def get_execution_time(execution_time: float) -> tuple:
@@ -39,6 +40,7 @@ class TelegramReport:
         Report for a new experiment running. (`sesg experiment start`)
         """
         message = f"\U00002705Starting <b>{self.experiment_name}</b> execution\U00002705\n\n" \
+                  f"<b>Strategies</b>: {self.strategies}\n" \
                   f"<b>Slr</b>: {self.slr_name}\n" \
                   f"<b>Datetime</b>: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}\n" \
                   f"<b>PC specs</b>: {os.environ.get('PC_SPECS')}"
