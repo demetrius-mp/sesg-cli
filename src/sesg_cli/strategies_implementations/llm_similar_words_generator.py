@@ -98,8 +98,8 @@ class LlmSimilarWordsGenerator(SimilarWordsGenerator):
             raise RuntimeError(
                 f"No similar words returned or the response is not well structured. Response: {response}")
 
-        similar_words = similar_words if word not in similar_words else similar_words.remove(
-            word)
+        if word in similar_words:
+            similar_words.remove(word)
 
         return similar_words
 
