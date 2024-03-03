@@ -161,6 +161,7 @@ cython_debug/
 
 sesg-slrs/
 config.toml
+config_test.toml
 .idea/
 docker-compose.yml
 data/
