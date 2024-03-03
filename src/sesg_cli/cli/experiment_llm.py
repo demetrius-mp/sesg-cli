@@ -1,6 +1,7 @@
 from itertools import product
 from pathlib import Path
 from random import sample
+from time import time
 from typing import Any
 
 import typer
@@ -19,6 +20,7 @@ from sesg_cli.strategies import (
     SimilarWordGeneratorStrategy,
     TopicExtractionStrategy,
 )
+from sesg_cli.telegram_report import TelegramReport
 
 
 app = typer.Typer(rich_markup_mode="markdown",
@@ -63,6 +65,7 @@ def start(  # noqa: C901 - method too complex
     generated for this experiment using a set of parameters for the strategy, will skip it.
     """  # noqa: E501
 
+    start_time = time()
     from sesg.search_string import generate_search_string, set_pub_year_boundaries
     from sesg.similar_words.bert_strategy import BertSimilarWordsGenerator
     from sesg.topic_extraction import (
@@ -79,6 +82,13 @@ def start(  # noqa: C901 - method too complex
     logging.set_verbosity_error()
 
     config = Config.from_toml(config_toml_path)
+
+    telegram_report = TelegramReport(
+        slr_name=slr_name,
+        experiment_name=experiment_name,
+        strategies=list(product([s.value for s in topic_extraction_strategies_list],
+                                [s.value for s in similar_word_strategies_list])),
+    )
 
     with Session() as session:
         slr = SLR.get_by_name(slr_name, session)
@@ -116,6 +126,8 @@ def start(  # noqa: C901 - method too complex
 
         print("Loading tokenizer and language model...")
         print()
+
+        telegram_report.send_new_execution_report()
 
         with Progress() as progress:
             for strategies_set in product(similar_word_strategies_list, topic_extraction_strategies_list):
@@ -184,6 +196,12 @@ def start(  # noqa: C901 - method too complex
                         session=session,
                     )
 
+                    if i+1 in (n_params*0.25, n_params*0.50, n_params*0.75):
+                        telegram_report.send_progress_report(strategy=f"{topic_extraction_strategy.value} - {similar_word_strategy.value}",
+                                                             percentage=int(
+                                                                 ((i+1)/n_params)*100),
+                                                             exec_time=time()-start_time)
+
                     if existing_params is not None:
                         progress.update(
                             task_id,
@@ -246,3 +264,5 @@ def start(  # noqa: C901 - method too complex
                     session.commit()
 
                 progress.remove_task(task_id)
+
+    telegram_report.send_finish_report(exec_time=time()-start_time)
