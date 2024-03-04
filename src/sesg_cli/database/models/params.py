@@ -90,9 +90,9 @@ class Params(Base):
         CheckConstraint(
             "lda_params_id is not null or bertopic_params_id is not null"),
         UniqueConstraint(
-            "experiment_id", "formulation_params_id", "lda_params_id"),
+            "experiment_id", "formulation_params_id", "lda_params_id", "similar_word_strategy"),
         UniqueConstraint(
-            "experiment_id", "formulation_params_id", "bertopic_params_id"
+            "experiment_id", "formulation_params_id", "bertopic_params_id", "similar_word_strategy"
         ),
     )
 
@@ -101,6 +101,7 @@ class Params(Base):
         cls,
         experiment_id: int,
         formulation_params_id: int,
+        generator: str,
         session: Session,
         bertopic_params_id: int | None = None,
         lda_params_id: int | None = None,
@@ -108,6 +109,7 @@ class Params(Base):
         stmt = select(Params).where(
             Params.experiment_id == experiment_id,
             Params.formulation_params_id == formulation_params_id,
+            Params.similar_word_strategy == generator
         )
 
         if bertopic_params_id is not None:

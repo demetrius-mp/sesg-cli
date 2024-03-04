@@ -177,6 +177,7 @@ def start(  # noqa: C901 - method too complex
                     similar_word_generator=similar_word_generator,
                     experiment_id=experiment.id,
                     session=session,
+                    generator=similar_word_strategy,
                 )
 
                 for i, params in enumerate(config_params_list):
@@ -191,6 +192,7 @@ def start(  # noqa: C901 - method too complex
                     existing_params = Params.get_one_or_none(
                         experiment_id=params.experiment_id,
                         formulation_params_id=params.formulation_params_id,
+                        generator=params.similar_word_strategy,
                         bertopic_params_id=params.bertopic_params_id,
                         lda_params_id=params.lda_params_id,
                         session=session,

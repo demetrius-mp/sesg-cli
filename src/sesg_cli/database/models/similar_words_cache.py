@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Text, UniqueConstraint
+from sqlalchemy import ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.orm import (
     Mapped,
     mapped_column,
@@ -20,6 +20,8 @@ class SimilarWordsCache(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, init=False)
 
+    similar_word_strategy: Mapped[str] = mapped_column(String(25))
+
     experiment_id: Mapped[int] = mapped_column(
         ForeignKey("experiment.id"),
         nullable=False,
@@ -37,4 +39,5 @@ class SimilarWordsCache(Base):
         default_factory=list,
     )
 
-    __table_args__ = (UniqueConstraint("experiment_id", "word"),)
+    __table_args__ = (UniqueConstraint(
+        "experiment_id", "word", "similar_word_strategy"),)

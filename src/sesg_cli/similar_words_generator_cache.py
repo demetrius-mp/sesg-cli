@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from sesg_cli.database.models import SimilarWord, SimilarWordsCache
+from sesg_cli.strategies import SimilarWordGeneratorStrategy
 from sesg_cli.strategies_implementations.llm_similar_words_generator import (
     LlmSimilarWordsGenerator,
 )
@@ -16,6 +17,7 @@ class SimilarWordsGeneratorCache(SimilarWordsGenerator):
     similar_word_generator: BertSimilarWordsGenerator | LlmSimilarWordsGenerator
     session: Session
     experiment_id: int
+    generator:  SimilarWordGeneratorStrategy
 
     def get_from_cache(self, key: str) -> list[str] | None:
         stmt = (
@@ -23,6 +25,7 @@ class SimilarWordsGeneratorCache(SimilarWordsGenerator):
             .options(joinedload(SimilarWordsCache.similar_words_list))
             .where(SimilarWordsCache.experiment_id == self.experiment_id)
             .where(SimilarWordsCache.word == key)
+            .where(SimilarWordsCache.similar_word_strategy == self.generator.value)
         )
 
         result = self.session.execute(stmt).unique().scalar_one_or_none()
@@ -35,6 +38,7 @@ class SimilarWordsGeneratorCache(SimilarWordsGenerator):
     def save_on_cache(self, key: str, value: list[str]) -> None:
         s = SimilarWordsCache(
             experiment_id=self.experiment_id,
+            similar_word_strategy=self.generator.value,
             word=key,
             similar_words_list=[
                 SimilarWord(
