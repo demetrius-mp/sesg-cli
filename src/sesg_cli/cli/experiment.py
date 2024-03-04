@@ -118,6 +118,7 @@ def start(
             ),
             experiment_id=experiment.id,
             session=session,
+            generator=SimilarWordGeneratorStrategy.bert,
         )
 
         with Progress() as progress:
@@ -149,6 +150,7 @@ def start(
                         formulation_params_id=params.formulation_params_id,
                         bertopic_params_id=params.bertopic_params_id,
                         lda_params_id=params.lda_params_id,
+                        generator=SimilarWordGeneratorStrategy.bert,
                         session=session,
                     )
 
