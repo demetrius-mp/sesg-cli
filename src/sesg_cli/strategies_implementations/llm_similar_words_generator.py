@@ -12,7 +12,7 @@ class Prompts:
     """
         Creates a wrapper for possibles prompts to pass to the llm model. 
         In this implementation is possible to define the amount of synonyms 
-        to be generated. By default, it is 5.
+        to be generated. By default, it is 7.
     """
 
     base_prompt = {
@@ -127,7 +127,7 @@ class LlmSimilarWordsGenerator(SimilarWordsGenerator):
             try:
                 response = self.chain.invoke({
                     "context": context,
-                    "number_similar_words": 5,
+                    "number_similar_words": 7,
                     "word_to_be_enriched": word
                 })
 
