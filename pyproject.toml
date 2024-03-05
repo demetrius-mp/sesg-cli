@@ -17,7 +17,11 @@ dependencies = [
   "rich==13.3.5",
   "pypdf2==3.0.1",
   "xlsxwriter==3.1.2",
-  "networkx==3.1",
+  "networkx==3.1",  
+  "langchain==0.1.9",
+  "langchain-community==0.0.24",
+  "langchain-core==0.1.27",
+  "langchain-openai==0.0.8",
 ]
 
 [project.scripts]
