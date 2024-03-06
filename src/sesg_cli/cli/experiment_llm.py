@@ -53,7 +53,8 @@ def start(  # noqa: C901 - method too complex
             help="Which topic extraction strategies to use.",
         ),
         similar_word_strategies_list: list[SimilarWordGeneratorStrategy] = typer.Option(
-            [SimilarWordGeneratorStrategy.bert, SimilarWordGeneratorStrategy.llm],
+            [SimilarWordGeneratorStrategy.bert,
+                SimilarWordGeneratorStrategy.mistral],
             "--similar-word-strategy",
             "-sws",
             help="Which similar word generation strategies to use.",
@@ -163,13 +164,15 @@ def start(  # noqa: C901 - method too complex
                         bert_tokenizer=bert_tokenizer,
                     )
 
-                elif similar_word_strategy == SimilarWordGeneratorStrategy.llm:
+                elif isinstance(similar_word_strategy, SimilarWordGeneratorStrategy):
                     similar_word_generator = LlmSimilarWordsGenerator(
-                        enrichment_text=enrichment_text)
+                        enrichment_text=enrichment_text,
+                        model=similar_word_strategy
+                    )
 
                 else:
                     raise RuntimeError(
-                        "Invalid Similar Word Generation Strategy. Must be either ['bert','llm']."
+                        f"Invalid Similar Word Generation Strategy. Must be: {[e.value for e in SimilarWordGeneratorStrategy]}."
                         # noqa: E501
                     )
 

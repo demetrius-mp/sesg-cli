@@ -23,4 +23,5 @@ class SimilarWordGeneratorStrategy(str, Enum):
         'bert'
     """
     bert = "bert"
-    llm = "llm"
+    mistral = "mistral"
+    gpt_3 = "gpt-3.5-turbo"
