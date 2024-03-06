@@ -6,6 +6,7 @@ from langchain_core.output_parsers.json import SimpleJsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 from sesg.similar_words.protocol import SimilarWordsGenerator
+from tenacity import retry, stop_after_attempt
 
 
 class Prompts:
@@ -103,7 +104,19 @@ class LlmSimilarWordsGenerator(SimilarWordsGenerator):
 
         return similar_words
 
-    def __call__(self, word: str, retries: int = 3) -> list[str]:
+    @retry(stop=stop_after_attempt(3))
+    def _invoke_model(self, context: str, word: str) -> list[str]:
+        response = self.chain.invoke({
+            "context": context,
+            "number_similar_words": 7,
+            "word_to_be_enriched": word
+        })
+
+        similar_words = self._get_similar_words(response, word)
+
+        return similar_words
+
+    def __call__(self, word: str) -> list[str]:
         """Generates similar words using LLMs.
 
         Args:
@@ -121,21 +134,6 @@ class LlmSimilarWordsGenerator(SimilarWordsGenerator):
 
         context = " ".join(selected_sentences)
 
-        retries = retries
-        while retries > 0:
-            retries -= 1
-            try:
-                response = self.chain.invoke({
-                    "context": context,
-                    "number_similar_words": 7,
-                    "word_to_be_enriched": word
-                })
-
-                similar_words = self._get_similar_words(response, word)
-            except Exception as e:
-                if retries == 0:
-                    raise RuntimeError(
-                        f"Model could not generate a JSON response. Parser error: {e}")
-                continue
+        similar_words = self._invoke_model(context, word)
 
         return similar_words
