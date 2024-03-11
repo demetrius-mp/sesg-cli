@@ -1,5 +1,6 @@
 """Generates similar words using LLMs."""
 from dataclasses import dataclass
+from string import punctuation
 
 from langchain_community.llms import Ollama
 from langchain_core.output_parsers.json import SimpleJsonOutputParser
@@ -7,6 +8,9 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 from sesg.similar_words.protocol import SimilarWordsGenerator
 from tenacity import retry, stop_after_attempt
+
+
+_PUNCTUATION: set[str] = set(punctuation) - {"'", "-"}
 
 
 class Prompts:
@@ -101,6 +105,12 @@ class LlmSimilarWordsGenerator(SimilarWordsGenerator):
 
         if word in similar_words:
             similar_words.remove(word)
+
+        for word_idx, word in enumerate(similar_words):
+            for char in word:
+                if char in _PUNCTUATION:
+                    similar_words[word_idx] = word.replace(
+                        char, " ")
 
         return similar_words
 
